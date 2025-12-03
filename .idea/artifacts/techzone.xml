@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="techzone">
+    <output-path>$PROJECT_DIR$/out/artifacts/techzone</output-path>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="techzone" />
+        </element>
+      </element>
+      <element id="javaee-facet-resources" facet="techzone/web/Web" />
+    </root>
+  </artifact>
+</component>
