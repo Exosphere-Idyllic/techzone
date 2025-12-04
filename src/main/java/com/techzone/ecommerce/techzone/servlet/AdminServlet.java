@@ -1,4 +1,4 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-public class LoginServlet {
+public class AdminServlet {
 }
