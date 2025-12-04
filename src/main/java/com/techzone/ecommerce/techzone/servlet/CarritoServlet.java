@@ -234,4 +234,218 @@ public class CarritoServlet extends HttpServlet {
             }
 
         } catch (NumberFormatException e) {
-            logger.warn("Parámetros inválidos: i
+            logger.warn("Parámetros inválidos: idProducto={}, cantidad={}", idProductoParam, cantidadParam);
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, "Parámetros inválidos", null);
+            } else {
+                SessionUtil.setFlashMessage(request, "error", "Parámetros inválidos");
+                response.sendRedirect(request.getContextPath() + "/productos");
+            }
+        } catch (ServiceException e) {
+            logger.error("Error al agregar al carrito: {}", e.getMessage());
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, e.getMessage(), null);
+            } else {
+                SessionUtil.setFlashMessage(request, "error", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        }
+    }
+
+    /**
+     * Actualiza la cantidad de un item en el carrito
+     */
+    private void actualizarCantidad(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Integer idUsuario = SessionUtil.getIdUsuario(request);
+        String idCarritoParam = request.getParameter("idCarrito");
+        String cantidadParam = request.getParameter("cantidad");
+
+        // Validar parámetros
+        if (idCarritoParam == null || cantidadParam == null) {
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, "Parámetros incompletos", null);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+            return;
+        }
+
+        try {
+            int idCarrito = Integer.parseInt(idCarritoParam);
+            int cantidad = Integer.parseInt(cantidadParam);
+
+            // Si cantidad es 0 o menor, eliminar el item
+            if (cantidad <= 0) {
+                carritoService.eliminarDelCarrito(idCarrito);
+                logger.info("Item {} eliminado del carrito (cantidad 0)", idCarrito);
+            } else {
+                carritoService.actualizarCantidad(idCarrito, cantidad);
+                logger.info("Item {} actualizado a cantidad {}", idCarrito, cantidad);
+            }
+
+            // Obtener nuevo total y contador
+            CarritoCompleto carrito = carritoService.obtenerCarritoCompleto(idUsuario);
+            SessionUtil.setItemsCarrito(request, carrito.getCantidadTotal());
+
+            if (isAjaxRequest(request)) {
+                // Enviar respuesta con datos actualizados
+                String jsonData = String.format(
+                        "{\"success\":true,\"cantidadTotal\":%d,\"subtotal\":%.2f,\"total\":%.2f}",
+                        carrito.getCantidadTotal(),
+                        carrito.getSubtotal(),
+                        carrito.getTotal()
+                );
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                PrintWriter out = response.getWriter();
+                out.print(jsonData);
+                out.flush();
+            } else {
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+
+        } catch (NumberFormatException e) {
+            logger.warn("Parámetros inválidos: idCarrito={}, cantidad={}", idCarritoParam, cantidadParam);
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, "Parámetros inválidos", null);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        } catch (ServiceException e) {
+            logger.error("Error al actualizar cantidad: {}", e.getMessage());
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, e.getMessage(), null);
+            } else {
+                SessionUtil.setFlashMessage(request, "error", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        }
+    }
+
+    /**
+     * Elimina un item del carrito
+     */
+    private void eliminarDelCarrito(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Integer idUsuario = SessionUtil.getIdUsuario(request);
+        String idCarritoParam = request.getParameter("idCarrito");
+
+        // Validar parámetro
+        if (idCarritoParam == null || idCarritoParam.isEmpty()) {
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, "Item no especificado", null);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+            return;
+        }
+
+        try {
+            int idCarrito = Integer.parseInt(idCarritoParam);
+
+            // Eliminar item
+            carritoService.eliminarDelCarrito(idCarrito);
+
+            // Actualizar contador en sesión
+            int nuevoContador = carritoService.contarCantidadTotal(idUsuario);
+            SessionUtil.setItemsCarrito(request, nuevoContador);
+
+            logger.info("Item {} eliminado del carrito del usuario {}", idCarrito, idUsuario);
+
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, true, "Producto eliminado", nuevoContador);
+            } else {
+                SessionUtil.setFlashMessage(request, "success", "Producto eliminado del carrito");
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+
+        } catch (NumberFormatException e) {
+            logger.warn("ID de carrito inválido: {}", idCarritoParam);
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, "ID inválido", null);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        } catch (ServiceException e) {
+            logger.error("Error al eliminar del carrito: {}", e.getMessage());
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, e.getMessage(), null);
+            } else {
+                SessionUtil.setFlashMessage(request, "error", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        }
+    }
+
+    /**
+     * Vacía completamente el carrito
+     */
+    private void vaciarCarrito(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Integer idUsuario = SessionUtil.getIdUsuario(request);
+
+        try {
+            carritoService.vaciarCarrito(idUsuario);
+            SessionUtil.setItemsCarrito(request, 0);
+
+            logger.info("Carrito del usuario {} vaciado", idUsuario);
+
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, true, "Carrito vaciado", 0);
+            } else {
+                SessionUtil.setFlashMessage(request, "success", "Carrito vaciado correctamente");
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+
+        } catch (ServiceException e) {
+            logger.error("Error al vaciar carrito: {}", e.getMessage());
+            if (isAjaxRequest(request)) {
+                enviarRespuestaJson(response, false, e.getMessage(), null);
+            } else {
+                SessionUtil.setFlashMessage(request, "error", e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/carrito");
+            }
+        }
+    }
+
+    // ==================== MÉTODOS AUXILIARES ====================
+
+    /**
+     * Verifica si es una petición AJAX
+     */
+    private boolean isAjaxRequest(HttpServletRequest request) {
+        String xRequestedWith = request.getHeader("X-Requested-With");
+        return "XMLHttpRequest".equals(xRequestedWith);
+    }
+
+    /**
+     * Envía una respuesta JSON simple
+     */
+    private void enviarRespuestaJson(HttpServletResponse response, boolean success,
+                                      String mensaje, Object data) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"success\":").append(success);
+
+        if (mensaje != null) {
+            json.append(",\"mensaje\":\"").append(mensaje.replace("\"", "\\\"")).append("\"");
+        }
+
+        if (data != null) {
+            json.append(",\"data\":").append(data);
+        }
+
+        json.append("}");
+
+        PrintWriter out = response.getWriter();
+        out.print(json.toString());
+        out.flush();
+    }
+}
