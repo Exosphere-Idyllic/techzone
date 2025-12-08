@@ -253,10 +253,10 @@ public class AdminServlet extends HttpServlet {
 
         try {
             // Obtener estadísticas de ventas
-            EstadisticasVentas ventas = pedidoService.obtenerEstadisticasVentas();
+            PedidoService.EstadisticasVentas ventas = pedidoService.obtenerEstadisticasVentas();
 
             // Obtener estadísticas de productos
-            EstadisticasProductos productos = productoService.obtenerEstadisticasProductos();
+            ProductoService.EstadisticasProductos productos = productoService.obtenerEstadisticasProductos();
 
             request.setAttribute("ventas", ventas);
             request.setAttribute("productos", productos);

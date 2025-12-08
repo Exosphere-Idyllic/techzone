@@ -1,14 +1,8 @@
 package com.techzone.ecommerce.techzone.service;
 
 import com.google.protobuf.ServiceException;
-import com.techzone.ecommerce.techzone.dao.DetallePedidoDAO;
-import com.techzone.ecommerce.techzone.dao.ProductoDAO;
-import com.techzone.ecommerce.techzone.dao.ResenaDAO;
-import com.techzone.ecommerce.techzone.dao.UsuarioDAO;
-import com.techzone.ecommerce.techzone.model.DetallePedido;
-import com.techzone.ecommerce.techzone.model.Producto;
-import com.techzone.ecommerce.techzone.model.Resena;
-import com.techzone.ecommerce.techzone.model.Usuario;
+import com.techzone.ecommerce.techzone.dao.*;
+import com.techzone.ecommerce.techzone.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +22,14 @@ public class ResenaService {
     private final ProductoDAO productoDAO;
     private final UsuarioDAO usuarioDAO;
     private final DetallePedidoDAO detalleDAO;
+    private final PedidoDAO pedidoDAO;
 
     public ResenaService() {
         this.resenaDAO = new ResenaDAO();
         this.productoDAO = new ProductoDAO();
         this.usuarioDAO = new UsuarioDAO();
         this.detalleDAO = new DetallePedidoDAO();
+        this.pedidoDAO = new PedidoDAO();
     }
 
     // ==================== CREACIÓN Y GESTIÓN DE RESEÑAS ====================
@@ -379,19 +375,16 @@ public class ResenaService {
      * Verifica si un usuario ha comprado un producto
      */
     private boolean haCompradoProducto(int idUsuario, int idProducto) throws SQLException {
-        // Obtener todos los detalles de pedidos del producto
         List<DetallePedido> detalles = detalleDAO.obtenerPorProducto(idProducto);
-
-        // Verificar si alguno pertenece a un pedido del usuario
         for (DetallePedido detalle : detalles) {
-            // Aquí deberíamos verificar también que el pedido esté en estado ENTREGADO
-            // pero por simplicidad solo verificamos que exista el detalle
-            if (detalle.getIdPedido() != null) {
-                // Idealmente verificar con PedidoDAO si ese pedido pertenece al usuario
-                return true;
+            Optional<Pedido> pedido = pedidoDAO.buscarPorId(detalle.getIdPedido());
+            if (pedido.isPresent() && pedido.get().getIdUsuario().equals(idUsuario)) {
+                // Verificar que el pedido esté entregado
+                if (pedido.get().getEstado() == Pedido.EstadoPedido.ENTREGADO) {
+                    return true;
+                }
             }
         }
-
         return false;
     }
 

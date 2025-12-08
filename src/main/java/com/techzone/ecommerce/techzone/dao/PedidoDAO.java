@@ -531,4 +531,15 @@ public class PedidoDAO {
 
         return pedido;
     }
+    public int contarPedidos() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM pedidos";
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
 }

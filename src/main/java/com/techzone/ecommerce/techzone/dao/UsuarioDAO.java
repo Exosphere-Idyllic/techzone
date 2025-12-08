@@ -465,4 +465,7 @@ public class UsuarioDAO {
 
         return usuario;
     }
+    public int contarUsuarios() throws SQLException {
+          return contarTodos();
+    }
 }
