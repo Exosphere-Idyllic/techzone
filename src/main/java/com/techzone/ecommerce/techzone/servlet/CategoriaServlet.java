@@ -18,7 +18,7 @@ import java.util.List;
 
 /**
  * Servlet para gestión pública de categorías
- * 
+ *
  * @author TechZone Team
  */
 @WebServlet(name = "CategoriaServlet", urlPatterns = {
@@ -78,4 +78,45 @@ public class CategoriaServlet extends HttpServlet {
             List<CategoriaInfo> categoriasInfo = new ArrayList<>();
 
             for (Categoria categoria : categorias) {
-                int cant
+                int cantidadProductos = productoDAO.contarPorCategoria(categoria.getIdCategoria());
+
+                CategoriaInfo info = new CategoriaInfo();
+                info.categoria = categoria;
+                info.cantidadProductos = cantidadProductos;
+
+                categoriasInfo.add(info);
+            }
+
+            // Enviar a la vista
+            request.setAttribute("categorias", categoriasInfo);
+            request.setAttribute("totalCategorias", categoriasInfo.size());
+
+            logger.debug("Listando {} categorías activas", categoriasInfo.size());
+
+            request.getRequestDispatcher("/views/categorias.jsp").forward(request, response);
+
+        } catch (SQLException e) {
+            logger.error("Error al listar categorías: {}", e.getMessage());
+            request.setAttribute("error", "Error al cargar las categorías");
+            request.getRequestDispatcher("/views/categorias.jsp").forward(request, response);
+        }
+    }
+
+    // ==================== CLASE AUXILIAR ====================
+
+    /**
+     * Clase para agrupar información de categoría con cantidad de productos
+     */
+    public static class CategoriaInfo {
+        public Categoria categoria;
+        public int cantidadProductos;
+
+        public Categoria getCategoria() {
+            return categoria;
+        }
+
+        public int getCantidadProductos() {
+            return cantidadProductos;
+        }
+    }
+}

@@ -608,4 +608,154 @@ public class PedidoService {
         public int getPedidosProcesando() { return pedidosProcesando; }
         public int getPedidosEnviados() { return pedidosEnviados; }
     }
+    // ==================== MÉTODOS PARA ADMINISTRACIÓN ====================
+
+    /**
+     * Cuenta el total de pedidos en el sistema
+     *
+     * @return Número total de pedidos
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarPedidosTotales() throws ServiceException {
+        try {
+            return pedidoDAO.contarTodos();
+        } catch (SQLException e) {
+            logger.error("Error al contar pedidos: {}", e.getMessage());
+            throw new ServiceException("Error al contar pedidos");
+        }
+    }
+
+    /**
+     * Cuenta pedidos filtrados por estado
+     *
+     * @param estado Estado del pedido a contar
+     * @return Número de pedidos con ese estado
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarPedidosPorEstado(Pedido.EstadoPedido estado) throws ServiceException {
+        try {
+            return pedidoDAO.contarPorEstado(estado);
+        } catch (SQLException e) {
+            logger.error("Error al contar pedidos por estado: {}", e.getMessage());
+            throw new ServiceException("Error al contar pedidos por estado");
+        }
+    }
+
+    /**
+     * Cuenta pedidos realizados en el día actual
+     *
+     * @return Número de pedidos de hoy
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarPedidosHoy() throws ServiceException {
+        try {
+            return pedidoDAO.contarHoy();
+        } catch (SQLException e) {
+            logger.error("Error al contar pedidos de hoy: {}", e.getMessage());
+            throw new ServiceException("Error al contar pedidos de hoy");
+        }
+    }
+
+    /**
+     * Obtiene los últimos N pedidos del sistema
+     * Útil para mostrar en dashboards
+     *
+     * @param limite Número máximo de pedidos a retornar
+     * @return Lista de pedidos recientes
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Pedido> obtenerUltimosPedidos(int limite) throws ServiceException {
+        try {
+            return pedidoDAO.obtenerUltimos(limite);
+        } catch (SQLException e) {
+            logger.error("Error al obtener últimos pedidos: {}", e.getMessage());
+            throw new ServiceException("Error al obtener últimos pedidos");
+        }
+    }
+
+    /**
+     * Obtiene estadísticas completas de ventas
+     * Incluye totales de ventas, ticket promedio, etc.
+     *
+     * @return Objeto con estadísticas de ventas
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public EstadisticasVentas obtenerEstadisticasVentas() throws ServiceException {
+        try {
+            EstadisticasVentas stats = new EstadisticasVentas();
+
+            // Ventas totales
+            stats.setTotalVentas(pedidoDAO.calcularTotalVentas().doubleValue());
+
+            // Ventas del día
+            stats.setVentasHoy(pedidoDAO.calcularVentasHoy().doubleValue());
+
+            // Ventas del mes
+            stats.setVentasMes(pedidoDAO.calcularVentasMes().doubleValue());
+
+            // Pedidos completados (ENTREGADO + ENVIADO)
+            stats.setPedidosCompletados(
+                    pedidoDAO.contarPorEstado(Pedido.EstadoPedido.ENTREGADO) +
+                            pedidoDAO.contarPorEstado(Pedido.EstadoPedido.ENVIADO)
+            );
+
+            // Pedidos cancelados
+            stats.setPedidosCancelados(
+                    pedidoDAO.contarPorEstado(Pedido.EstadoPedido.CANCELADO)
+            );
+
+            // Ticket promedio
+            stats.setTicketPromedio(pedidoDAO.calcularTicketPromedio().doubleValue());
+
+            return stats;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener estadísticas de ventas: {}", e.getMessage());
+            throw new ServiceException("Error al obtener estadísticas de ventas");
+        }
+    }
+
+    /**
+     * Clase para estadísticas de ventas
+     * Utilizada en el dashboard administrativo
+     */
+    public static class EstadisticasVentas {
+        private double totalVentas;
+        private double ventasHoy;
+        private double ventasMes;
+        private int pedidosCompletados;
+        private int pedidosCancelados;
+        private double ticketPromedio;
+
+        // Getters y setters
+        public double getTotalVentas() { return totalVentas; }
+        public void setTotalVentas(double totalVentas) {
+            this.totalVentas = totalVentas;
+        }
+
+        public double getVentasHoy() { return ventasHoy; }
+        public void setVentasHoy(double ventasHoy) {
+            this.ventasHoy = ventasHoy;
+        }
+
+        public double getVentasMes() { return ventasMes; }
+        public void setVentasMes(double ventasMes) {
+            this.ventasMes = ventasMes;
+        }
+
+        public int getPedidosCompletados() { return pedidosCompletados; }
+        public void setPedidosCompletados(int pedidosCompletados) {
+            this.pedidosCompletados = pedidosCompletados;
+        }
+
+        public int getPedidosCancelados() { return pedidosCancelados; }
+        public void setPedidosCancelados(int pedidosCancelados) {
+            this.pedidosCancelados = pedidosCancelados;
+        }
+
+        public double getTicketPromedio() { return ticketPromedio; }
+        public void setTicketPromedio(double ticketPromedio) {
+            this.ticketPromedio = ticketPromedio;
+        }
+    }
 }

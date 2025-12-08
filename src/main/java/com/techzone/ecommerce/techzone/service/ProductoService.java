@@ -589,4 +589,151 @@ public class ProductoService {
     public enum OrdenProducto {
         PRECIO_ASC, PRECIO_DESC, NOMBRE_ASC, NOMBRE_DESC, MAS_RECIENTE
     }
+    // ==================== MÉTODOS PARA ADMINISTRACIÓN ====================
+
+    /**
+     * Cuenta el total de productos en el sistema
+     *
+     * @return Número total de productos
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarProductos() throws ServiceException {
+        try {
+            return productoDAO.contarTodos();
+        } catch (SQLException e) {
+            logger.error("Error al contar productos: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos");
+        }
+    }
+
+    /**
+     * Cuenta productos con estado DISPONIBLE
+     *
+     * @return Número de productos activos
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarProductosActivos() throws ServiceException {
+        try {
+            return productoDAO.contarActivos();
+        } catch (SQLException e) {
+            logger.error("Error al contar productos activos: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos activos");
+        }
+    }
+
+    /**
+     * Cuenta productos con stock bajo el mínimo especificado
+     * Útil para alertas de reabastecimiento
+     *
+     * @param stockMinimo Stock mínimo considerado como bajo
+     * @return Número de productos con stock bajo
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarProductosBajoStock(int stockMinimo) throws ServiceException {
+        try {
+            return productoDAO.contarBajoStock(stockMinimo);
+        } catch (SQLException e) {
+            logger.error("Error al contar productos bajo stock: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos bajo stock");
+        }
+    }
+
+    /**
+     * Obtiene lista de productos con stock bajo el mínimo
+     *
+     * @param stockMinimo Stock mínimo considerado como bajo
+     * @param limite Número máximo de productos a retornar
+     * @return Lista de productos con stock bajo
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Producto> obtenerProductosBajoStock(int stockMinimo, int limite)
+            throws ServiceException {
+        try {
+            return productoDAO.obtenerBajoStock(stockMinimo, limite);
+        } catch (SQLException e) {
+            logger.error("Error al obtener productos bajo stock: {}", e.getMessage());
+            throw new ServiceException("Error al obtener productos bajo stock");
+        }
+    }
+
+    /**
+     * Obtiene estadísticas completas de productos
+     * Incluye conteos de productos activos, inactivos, sin stock, etc.
+     *
+     * @return Objeto con estadísticas de productos
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public EstadisticasProductos obtenerEstadisticasProductos() throws ServiceException {
+        try {
+            EstadisticasProductos stats = new EstadisticasProductos();
+
+            // Conteos básicos
+            stats.setTotalProductos(productoDAO.contarTodos());
+            stats.setProductosActivos(productoDAO.contarActivos());
+
+            // Calcular inactivos
+            int total = stats.getTotalProductos();
+            int activos = stats.getProductosActivos();
+            stats.setProductosInactivos(total - activos);
+
+            // Productos sin stock (stock = 0)
+            stats.setProductosSinStock(productoDAO.contarBajoStock(0));
+
+            // Productos con stock bajo (1-10 unidades)
+            stats.setProductosBajoStock(productoDAO.contarBajoStock(10));
+
+            // Valor total del inventario
+            stats.setValorInventario(productoDAO.calcularValorInventario().doubleValue());
+
+            return stats;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener estadísticas de productos: {}", e.getMessage());
+            throw new ServiceException("Error al obtener estadísticas de productos");
+        }
+    }
+
+    /**
+     * Clase para estadísticas de productos
+     * Utilizada en el dashboard administrativo
+     */
+    public static class EstadisticasProductos {
+        private int totalProductos;
+        private int productosActivos;
+        private int productosInactivos;
+        private int productosSinStock;
+        private int productosBajoStock;
+        private double valorInventario;
+
+        // Getters y setters
+        public int getTotalProductos() { return totalProductos; }
+        public void setTotalProductos(int totalProductos) {
+            this.totalProductos = totalProductos;
+        }
+
+        public int getProductosActivos() { return productosActivos; }
+        public void setProductosActivos(int productosActivos) {
+            this.productosActivos = productosActivos;
+        }
+
+        public int getProductosInactivos() { return productosInactivos; }
+        public void setProductosInactivos(int productosInactivos) {
+            this.productosInactivos = productosInactivos;
+        }
+
+        public int getProductosSinStock() { return productosSinStock; }
+        public void setProductosSinStock(int productosSinStock) {
+            this.productosSinStock = productosSinStock;
+        }
+
+        public int getProductosBajoStock() { return productosBajoStock; }
+        public void setProductosBajoStock(int productosBajoStock) {
+            this.productosBajoStock = productosBajoStock;
+        }
+
+        public double getValorInventario() { return valorInventario; }
+        public void setValorInventario(double valorInventario) {
+            this.valorInventario = valorInventario;
+        }
+    }
 }

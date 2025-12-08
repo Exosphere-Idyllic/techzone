@@ -11,6 +11,8 @@ import java.util.Optional;
 
 /**
  * DAO para la gestión de productos
+ * Proporciona operaciones CRUD completas y métodos de consulta para productos
+ *
  * @author TechZone Team
  */
 public class ProductoDAO {
@@ -24,7 +26,11 @@ public class ProductoDAO {
     // ==================== CREATE ====================
 
     /**
-     * Crea un nuevo producto
+     * Crea un nuevo producto en la base de datos
+     *
+     * @param producto Objeto Producto con los datos a insertar
+     * @return ID del producto creado
+     * @throws SQLException Si hay error en la operación de base de datos
      */
     public int crear(Producto producto) throws SQLException {
         String sql = "INSERT INTO productos (id_categoria, nombre, descripcion, precio, stock, marca, " +
@@ -68,6 +74,10 @@ public class ProductoDAO {
 
     /**
      * Busca un producto por su ID
+     *
+     * @param id ID del producto a buscar
+     * @return Optional con el producto si existe, empty si no
+     * @throws SQLException Si hay error en la consulta
      */
     public Optional<Producto> buscarPorId(int id) throws SQLException {
         String sql = "SELECT * FROM productos WHERE id_producto = ?";
@@ -88,7 +98,10 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtiene todos los productos
+     * Obtiene todos los productos ordenados por fecha de registro
+     *
+     * @return Lista de todos los productos
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> obtenerTodos() throws SQLException {
         String sql = "SELECT * FROM productos ORDER BY fecha_registro DESC";
@@ -107,7 +120,11 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtiene productos por categoría
+     * Obtiene productos filtrados por categoría
+     *
+     * @param idCategoria ID de la categoría
+     * @return Lista de productos de la categoría
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> obtenerPorCategoria(int idCategoria) throws SQLException {
         String sql = "SELECT * FROM productos WHERE id_categoria = ? ORDER BY nombre";
@@ -129,7 +146,10 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtiene productos disponibles (con stock)
+     * Obtiene productos disponibles con stock mayor a 0
+     *
+     * @return Lista de productos disponibles
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> obtenerDisponibles() throws SQLException {
         String sql = "SELECT * FROM productos WHERE estado = 'DISPONIBLE' AND stock > 0 ORDER BY nombre";
@@ -148,7 +168,11 @@ public class ProductoDAO {
     }
 
     /**
-     * Busca productos por nombre (búsqueda parcial)
+     * Busca productos por nombre (búsqueda parcial con LIKE)
+     *
+     * @param nombre Término de búsqueda
+     * @return Lista de productos que coinciden con el nombre
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> buscarPorNombre(String nombre) throws SQLException {
         String sql = "SELECT * FROM productos WHERE nombre LIKE ? ORDER BY nombre";
@@ -170,7 +194,10 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtiene productos con descuento
+     * Obtiene productos que tienen descuento activo
+     *
+     * @return Lista de productos con descuento
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> obtenerConDescuento() throws SQLException {
         String sql = "SELECT * FROM productos WHERE descuento > 0 AND estado = 'DISPONIBLE' " +
@@ -190,7 +217,11 @@ public class ProductoDAO {
     }
 
     /**
-     * Obtiene productos más recientes
+     * Obtiene los productos más recientes
+     *
+     * @param limite Número máximo de productos a retornar
+     * @return Lista de productos recientes
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Producto> obtenerMasRecientes(int limite) throws SQLException {
         String sql = "SELECT * FROM productos WHERE estado = 'DISPONIBLE' " +
@@ -212,10 +243,44 @@ public class ProductoDAO {
         return productos;
     }
 
+    /**
+     * Obtiene productos con stock bajo el mínimo especificado
+     * Útil para alertas de reabastecimiento
+     *
+     * @param stockMinimo Stock mínimo considerado como bajo
+     * @param limite Número máximo de productos a retornar
+     * @return Lista de productos con stock bajo
+     * @throws SQLException Si hay error en la consulta
+     */
+    public List<Producto> obtenerBajoStock(int stockMinimo, int limite) throws SQLException {
+        String sql = "SELECT * FROM productos WHERE stock <= ? AND estado = 'DISPONIBLE' " +
+                "ORDER BY stock ASC LIMIT ?";
+        List<Producto> productos = new ArrayList<>();
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, stockMinimo);
+            pstmt.setInt(2, limite);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    productos.add(mapearProducto(rs));
+                }
+            }
+        }
+
+        return productos;
+    }
+
     // ==================== UPDATE ====================
 
     /**
-     * Actualiza un producto existente
+     * Actualiza todos los campos de un producto existente
+     *
+     * @param producto Objeto Producto con los datos actualizados
+     * @return true si se actualizó correctamente, false si no
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizar(Producto producto) throws SQLException {
         String sql = "UPDATE productos SET id_categoria=?, nombre=?, descripcion=?, precio=?, " +
@@ -242,7 +307,12 @@ public class ProductoDAO {
     }
 
     /**
-     * Actualiza el stock de un producto
+     * Actualiza únicamente el stock de un producto
+     *
+     * @param idProducto ID del producto
+     * @param nuevoStock Nuevo valor de stock
+     * @return true si se actualizó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizarStock(int idProducto, int nuevoStock) throws SQLException {
         String sql = "UPDATE productos SET stock = ? WHERE id_producto = ?";
@@ -259,6 +329,12 @@ public class ProductoDAO {
 
     /**
      * Reduce el stock de un producto (para compras)
+     * Usa una condición WHERE para asegurar que hay stock suficiente
+     *
+     * @param idProducto ID del producto
+     * @param cantidad Cantidad a reducir
+     * @return true si se redujo el stock, false si no hay suficiente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean reducirStock(int idProducto, int cantidad) throws SQLException {
         String sql = "UPDATE productos SET stock = stock - ? WHERE id_producto = ? AND stock >= ?";
@@ -276,6 +352,11 @@ public class ProductoDAO {
 
     /**
      * Actualiza el estado de un producto
+     *
+     * @param idProducto ID del producto
+     * @param estado Nuevo estado
+     * @return true si se actualizó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizarEstado(int idProducto, Producto.EstadoProducto estado) throws SQLException {
         String sql = "UPDATE productos SET estado = ? WHERE id_producto = ?";
@@ -293,7 +374,12 @@ public class ProductoDAO {
     // ==================== DELETE ====================
 
     /**
-     * Elimina un producto
+     * Elimina un producto de la base de datos
+     * NOTA: Asegúrate de que no haya referencias en otras tablas
+     *
+     * @param idProducto ID del producto a eliminar
+     * @return true si se eliminó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean eliminar(int idProducto) throws SQLException {
         String sql = "DELETE FROM productos WHERE id_producto = ?";
@@ -306,12 +392,15 @@ public class ProductoDAO {
         }
     }
 
-    // ==================== UTILIDADES ====================
+    // ==================== UTILIDADES Y CONTADORES ====================
 
     /**
-     * Cuenta el total de productos
+     * Cuenta el total de productos en la base de datos
+     *
+     * @return Número total de productos
+     * @throws SQLException Si hay error en la consulta
      */
-    public int contarProductos() throws SQLException {
+    public int contarTodos() throws SQLException {
         String sql = "SELECT COUNT(*) FROM productos";
 
         try (Connection conn = dbConnection.getConnection();
@@ -327,7 +416,83 @@ public class ProductoDAO {
     }
 
     /**
-     * Verifica si hay stock disponible
+     * Cuenta productos con estado DISPONIBLE
+     *
+     * @return Número de productos activos
+     * @throws SQLException Si hay error en la consulta
+     */
+    public int contarActivos() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM productos WHERE estado = 'DISPONIBLE'";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cuenta productos con stock bajo o igual al mínimo especificado
+     *
+     * @param stockMinimo Stock mínimo considerado como bajo
+     * @return Número de productos con stock bajo
+     * @throws SQLException Si hay error en la consulta
+     */
+    public int contarBajoStock(int stockMinimo) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM productos WHERE stock <= ? AND estado = 'DISPONIBLE'";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, stockMinimo);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cuenta productos por categoría
+     *
+     * @param idCategoria ID de la categoría
+     * @return Número de productos en esa categoría
+     * @throws SQLException Si hay error en la consulta
+     */
+    public int contarPorCategoria(int idCategoria) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM productos WHERE id_categoria = ?";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, idCategoria);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Verifica si hay stock disponible para una cantidad requerida
+     *
+     * @param idProducto ID del producto
+     * @param cantidadRequerida Cantidad que se necesita
+     * @return true si hay stock suficiente, false si no
+     * @throws SQLException Si hay error en la consulta
      */
     public boolean verificarStock(int idProducto, int cantidadRequerida) throws SQLException {
         String sql = "SELECT stock FROM productos WHERE id_producto = ?";
@@ -347,10 +512,39 @@ public class ProductoDAO {
         return false;
     }
 
+    /**
+     * Calcula el valor total del inventario
+     * Suma (precio * stock) de todos los productos disponibles
+     *
+     * @return Valor total del inventario
+     * @throws SQLException Si hay error en la consulta
+     */
+    public BigDecimal calcularValorInventario() throws SQLException {
+        String sql = "SELECT SUM(precio * stock) as valor_total FROM productos " +
+                "WHERE estado = 'DISPONIBLE'";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                BigDecimal valor = rs.getBigDecimal("valor_total");
+                return valor != null ? valor : BigDecimal.ZERO;
+            }
+        }
+
+        return BigDecimal.ZERO;
+    }
+
     // ==================== MAPEO ====================
 
     /**
      * Mapea un ResultSet a un objeto Producto
+     * Convierte cada columna de la BD al campo correspondiente del modelo
+     *
+     * @param rs ResultSet con los datos del producto
+     * @return Objeto Producto mapeado
+     * @throws SQLException Si hay error al leer los datos
      */
     private Producto mapearProducto(ResultSet rs) throws SQLException {
         Producto producto = new Producto();

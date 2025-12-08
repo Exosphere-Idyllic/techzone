@@ -10,6 +10,8 @@ import java.util.Optional;
 
 /**
  * DAO para la gestión de usuarios
+ * Proporciona operaciones CRUD, autenticación y consultas estadísticas
+ *
  * @author TechZone Team
  */
 public class UsuarioDAO {
@@ -24,6 +26,11 @@ public class UsuarioDAO {
 
     /**
      * Crea un nuevo usuario en la base de datos
+     * NOTA: En producción, asegurarse de que password esté hasheado
+     *
+     * @param usuario Objeto Usuario con los datos a insertar
+     * @return ID del usuario creado
+     * @throws SQLException Si hay error en la operación
      */
     public int crear(Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuarios (nombre, apellido, email, password, rol, estado, " +
@@ -64,6 +71,10 @@ public class UsuarioDAO {
 
     /**
      * Busca un usuario por su ID
+     *
+     * @param id ID del usuario a buscar
+     * @return Optional con el usuario si existe
+     * @throws SQLException Si hay error en la consulta
      */
     public Optional<Usuario> buscarPorId(int id) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
@@ -85,6 +96,11 @@ public class UsuarioDAO {
 
     /**
      * Busca un usuario por su email
+     * Útil para login y validación de email único
+     *
+     * @param email Email del usuario
+     * @return Optional con el usuario si existe
+     * @throws SQLException Si hay error en la consulta
      */
     public Optional<Usuario> buscarPorEmail(String email) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE email = ?";
@@ -105,7 +121,10 @@ public class UsuarioDAO {
     }
 
     /**
-     * Obtiene todos los usuarios
+     * Obtiene todos los usuarios ordenados por fecha de registro
+     *
+     * @return Lista de todos los usuarios
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Usuario> obtenerTodos() throws SQLException {
         String sql = "SELECT * FROM usuarios ORDER BY fecha_registro DESC";
@@ -124,7 +143,11 @@ public class UsuarioDAO {
     }
 
     /**
-     * Obtiene usuarios por rol
+     * Obtiene usuarios filtrados por rol
+     *
+     * @param rol Rol a filtrar (ADMIN, CLIENTE, VENDEDOR)
+     * @return Lista de usuarios con ese rol
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Usuario> obtenerPorRol(Usuario.RolUsuario rol) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE rol = ? ORDER BY nombre, apellido";
@@ -146,7 +169,10 @@ public class UsuarioDAO {
     }
 
     /**
-     * Obtiene usuarios activos
+     * Obtiene solo usuarios con estado ACTIVO
+     *
+     * @return Lista de usuarios activos
+     * @throws SQLException Si hay error en la consulta
      */
     public List<Usuario> obtenerActivos() throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE estado = 'ACTIVO' ORDER BY nombre, apellido";
@@ -167,7 +193,11 @@ public class UsuarioDAO {
     // ==================== UPDATE ====================
 
     /**
-     * Actualiza un usuario existente
+     * Actualiza todos los campos de un usuario existente
+     *
+     * @param usuario Objeto Usuario con los datos actualizados
+     * @return true si se actualizó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizar(Usuario usuario) throws SQLException {
         String sql = "UPDATE usuarios SET nombre=?, apellido=?, email=?, password=?, rol=?, " +
@@ -192,6 +222,12 @@ public class UsuarioDAO {
 
     /**
      * Actualiza el estado de un usuario
+     * Útil para activar/desactivar cuentas
+     *
+     * @param idUsuario ID del usuario
+     * @param estado Nuevo estado
+     * @return true si se actualizó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizarEstado(int idUsuario, Usuario.EstadoUsuario estado) throws SQLException {
         String sql = "UPDATE usuarios SET estado = ? WHERE id_usuario = ?";
@@ -207,7 +243,13 @@ public class UsuarioDAO {
     }
 
     /**
-     * Actualiza la contraseña de un usuario
+     * Actualiza solo la contraseña de un usuario
+     * NOTA: Asegurarse de que el nuevo password esté hasheado
+     *
+     * @param idUsuario ID del usuario
+     * @param nuevoPassword Nueva contraseña (hasheada)
+     * @return true si se actualizó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean actualizarPassword(int idUsuario, String nuevoPassword) throws SQLException {
         String sql = "UPDATE usuarios SET password = ? WHERE id_usuario = ?";
@@ -225,7 +267,13 @@ public class UsuarioDAO {
     // ==================== DELETE ====================
 
     /**
-     * Elimina un usuario (físicamente)
+     * Elimina un usuario de la base de datos (físicamente)
+     * CUIDADO: Esta operación es irreversible
+     * Considerar usar actualizarEstado(id, INACTIVO) en su lugar
+     *
+     * @param idUsuario ID del usuario a eliminar
+     * @return true si se eliminó correctamente
+     * @throws SQLException Si hay error en la operación
      */
     public boolean eliminar(int idUsuario) throws SQLException {
         String sql = "DELETE FROM usuarios WHERE id_usuario = ?";
@@ -238,10 +286,46 @@ public class UsuarioDAO {
         }
     }
 
-    // ==================== UTILIDADES ====================
+    // ==================== AUTENTICACIÓN ====================
+
+    /**
+     * Valida las credenciales de un usuario para login
+     * NOTA: En producción, comparar password hasheado
+     * Solo retorna usuarios con estado ACTIVO
+     *
+     * @param email Email del usuario
+     * @param password Contraseña (en texto plano o hash según implementación)
+     * @return Optional con el usuario si las credenciales son válidas
+     * @throws SQLException Si hay error en la consulta
+     */
+    public Optional<Usuario> validarCredenciales(String email, String password) throws SQLException {
+        String sql = "SELECT * FROM usuarios WHERE email = ? AND password = ? AND estado = 'ACTIVO'";
+
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, email);
+            pstmt.setString(2, password);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapearUsuario(rs));
+                }
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    // ==================== UTILIDADES Y CONTADORES ====================
 
     /**
      * Verifica si un email ya está registrado
+     * Útil para validación durante el registro
+     *
+     * @param email Email a verificar
+     * @return true si el email ya existe
+     * @throws SQLException Si hay error en la consulta
      */
     public boolean existeEmail(String email) throws SQLException {
         String sql = "SELECT COUNT(*) FROM usuarios WHERE email = ?";
@@ -262,9 +346,12 @@ public class UsuarioDAO {
     }
 
     /**
-     * Cuenta el total de usuarios
+     * Cuenta el total de usuarios en el sistema
+     *
+     * @return Número total de usuarios
+     * @throws SQLException Si hay error en la consulta
      */
-    public int contarUsuarios() throws SQLException {
+    public int contarTodos() throws SQLException {
         String sql = "SELECT COUNT(*) FROM usuarios";
 
         try (Connection conn = dbConnection.getConnection();
@@ -280,31 +367,82 @@ public class UsuarioDAO {
     }
 
     /**
-     * Valida las credenciales de un usuario (login)
+     * Cuenta solo los usuarios con estado ACTIVO
+     *
+     * @return Número de usuarios activos
+     * @throws SQLException Si hay error en la consulta
      */
-    public Optional<Usuario> validarCredenciales(String email, String password) throws SQLException {
-        String sql = "SELECT * FROM usuarios WHERE email = ? AND password = ? AND estado = 'ACTIVO'";
+    public int contarActivos() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE estado = 'ACTIVO'";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cuenta usuarios registrados hoy
+     * Útil para dashboards y estadísticas
+     *
+     * @return Número de nuevos usuarios hoy
+     * @throws SQLException Si hay error en la consulta
+     */
+    public int contarNuevosHoy() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE DATE(fecha_registro) = CURDATE()";
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Cuenta usuarios por rol
+     *
+     * @param rol Rol a contar
+     * @return Número de usuarios con ese rol
+     * @throws SQLException Si hay error en la consulta
+     */
+    public int contarPorRol(Usuario.RolUsuario rol) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM usuarios WHERE rol = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, email);
-            pstmt.setString(2, password); // En producción, usar hash
+            pstmt.setString(1, rol.name());
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(mapearUsuario(rs));
+                    return rs.getInt(1);
                 }
             }
         }
 
-        return Optional.empty();
+        return 0;
     }
 
     // ==================== MAPEO ====================
 
     /**
      * Mapea un ResultSet a un objeto Usuario
+     * Convierte cada columna de la BD al campo correspondiente del modelo
+     *
+     * @param rs ResultSet con los datos del usuario
+     * @return Objeto Usuario mapeado
+     * @throws SQLException Si hay error al leer los datos
      */
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
         Usuario usuario = new Usuario();

@@ -428,4 +428,69 @@ public class UsuarioService {
         public int getTotalClientes() { return totalClientes; }
         public int getTotalAdmins() { return totalAdmins; }
     }
+    // ==================== MÉTODOS PARA ADMINISTRACIÓN ====================
+
+    /**
+     * Cuenta usuarios con estado ACTIVO
+     *
+     * @return Número de usuarios activos
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarUsuariosActivos() throws ServiceException {
+        try {
+            return usuarioDAO.contarActivos();
+        } catch (SQLException e) {
+            logger.error("Error al contar usuarios activos: {}", e.getMessage());
+            throw new ServiceException("Error al contar usuarios activos");
+        }
+    }
+
+    /**
+     * Cuenta usuarios registrados en el día actual
+     * Útil para dashboards de crecimiento
+     *
+     * @return Número de nuevos usuarios hoy
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public int contarUsuariosNuevosHoy() throws ServiceException {
+        try {
+            return usuarioDAO.contarNuevosHoy();
+        } catch (SQLException e) {
+            logger.error("Error al contar usuarios nuevos: {}", e.getMessage());
+            throw new ServiceException("Error al contar usuarios nuevos");
+        }
+    }
+
+    /**
+     * Obtiene lista de usuarios filtrados por rol
+     *
+     * @param rol Rol a filtrar (ADMIN, CLIENTE, VENDEDOR)
+     * @return Lista de usuarios con ese rol
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Usuario> obtenerUsuariosPorRol(Usuario.RolUsuario rol)
+            throws ServiceException {
+        try {
+            return usuarioDAO.obtenerPorRol(rol);
+        } catch (SQLException e) {
+            logger.error("Error al obtener usuarios por rol: {}", e.getMessage());
+            throw new ServiceException("Error al obtener usuarios por rol");
+        }
+    }
+
+    /**
+     * Obtiene todos los usuarios del sistema
+     * Método para uso administrativo
+     *
+     * @return Lista de todos los usuarios
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Usuario> obtenerTodosUsuarios() throws ServiceException {
+        try {
+            return usuarioDAO.obtenerTodos();
+        } catch (SQLException e) {
+            logger.error("Error al obtener usuarios: {}", e.getMessage());
+            throw new ServiceException("Error al obtener usuarios");
+        }
+    }
 }
