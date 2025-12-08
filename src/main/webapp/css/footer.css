@@ -1,0 +1,463 @@
+/* ===================================
+   TECHZONE - Footer Styles
+   =================================== */
+
+:root {
+    --footer-bg: #1a1a1a;
+    --footer-border: #333333;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #707070;
+    --accent-color: #00d4ff;
+    --hover-color: #00b8e6;
+}
+
+/* ===================================
+   FOOTER CONTAINER
+   =================================== */
+
+.footer {
+    background-color: var(--footer-bg);
+    border-top: 1px solid var(--footer-border);
+    margin-top: auto;
+    padding-top: 40px;
+}
+
+.footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* ===================================
+   FOOTER TOP SECTION
+   =================================== */
+
+.footer-top {
+    display: grid;
+    grid-template-columns: 2fr repeat(4, 1fr);
+    gap: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--footer-border);
+}
+
+/* Brand Column */
+.footer-brand {
+    max-width: 350px;
+}
+
+.footer-logo {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+}
+
+.footer-logo span {
+    color: var(--accent-color);
+}
+
+.footer-description {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+/* Social Links */
+.footer-social {
+    display: flex;
+    gap: 12px;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.social-link:hover {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    transform: translateY(-3px);
+}
+
+.social-link svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--text-secondary);
+    transition: fill 0.3s ease;
+}
+
+.social-link:hover svg {
+    fill: #000;
+}
+
+/* ===================================
+   FOOTER COLUMNS
+   =================================== */
+
+.footer-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-title {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background-color: var(--accent-color);
+}
+
+/* Footer Links */
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+}
+
+.footer-links a::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--accent-color);
+    transition: width 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--text-primary);
+    transform: translateX(5px);
+}
+
+.footer-links a:hover::before {
+    width: 100%;
+}
+
+/* Contact Info */
+.footer-contact {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-contact li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.footer-contact svg {
+    width: 20px;
+    height: 20px;
+    fill: var(--accent-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.footer-contact span {
+    line-height: 1.5;
+}
+
+/* ===================================
+   FOOTER BOTTOM SECTION
+   =================================== */
+
+.footer-bottom {
+    padding: 25px 0;
+}
+
+.footer-bottom-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-copyright {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Payment Methods */
+.footer-payment {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.payment-label {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.payment-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.payment-icon {
+    height: 24px;
+    width: auto;
+    opacity: 0.7;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.payment-icon:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* ===================================
+   RESPONSIVE DESIGN
+   =================================== */
+
+@media (max-width: 1200px) {
+    .footer-top {
+        grid-template-columns: 2fr repeat(3, 1fr);
+    }
+
+    .footer-top .footer-column:last-child {
+        grid-column: 1 / -1;
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 992px) {
+    .footer-top {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer {
+        padding-top: 30px;
+    }
+
+    .footer-top {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding-bottom: 30px;
+    }
+
+    .footer-brand {
+        text-align: center;
+    }
+
+    .footer-social {
+        justify-content: center;
+    }
+
+    .footer-title::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .footer-links,
+    .footer-contact {
+        text-align: center;
+    }
+
+    .footer-contact li {
+        justify-content: center;
+        text-align: left;
+    }
+
+    .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .footer-payment {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-container {
+        padding: 0 15px;
+    }
+
+    .footer-logo {
+        font-size: 24px;
+    }
+
+    .footer-description {
+        font-size: 13px;
+    }
+
+    .social-link {
+        width: 36px;
+        height: 36px;
+    }
+
+    .social-link svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .footer-title {
+        font-size: 14px;
+    }
+
+    .footer-links a,
+    .footer-contact li {
+        font-size: 13px;
+    }
+
+    .payment-icons {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .payment-icon {
+        height: 20px;
+    }
+}
+
+/* ===================================
+   UTILITIES
+   =================================== */
+
+/* Animación para los iconos de redes sociales */
+@keyframes socialPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(0, 212, 255, 0);
+    }
+}
+
+.social-link:focus {
+    animation: socialPulse 1.5s infinite;
+    outline: none;
+}
+
+/* Estado de focus para accesibilidad */
+.footer-links a:focus {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 4px;
+}
+
+/* Smooth scroll */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ===================================
+   PRINT STYLES
+   =================================== */
+
+@media print {
+    .footer-social,
+    .footer-payment {
+        display: none;
+    }
+
+    .footer {
+        border-top: 2px solid #000;
+        padding: 20px 0;
+    }
+
+    .footer-top {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .footer-brand {
+        grid-column: 1 / -1;
+    }
+
+    .footer-links a {
+        color: #000;
+    }
+}
+
+/* ===================================
+   DARK MODE ENHANCEMENTS
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+    /* Ya está optimizado para dark mode por defecto */
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+
+/* Entrada suave del footer */
+.footer {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover effect para columnas en desktop */
+@media (min-width: 769px) {
+    .footer-column {
+        transition: transform 0.3s ease;
+    }
+
+    .footer-column:hover {
+        transform: translateY(-5px);
+    }
+}
