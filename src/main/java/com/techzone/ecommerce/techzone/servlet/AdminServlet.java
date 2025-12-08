@@ -190,7 +190,7 @@ public class AdminServlet extends HttpServlet {
 
             if (estadoFiltro != null && !estadoFiltro.isEmpty() && !"todos".equals(estadoFiltro)) {
                 Pedido.EstadoPedido estado = Pedido.EstadoPedido.valueOf(estadoFiltro.toUpperCase());
-                pedidos = pedidoService.obtenerPedidosPorEstado(estado);
+                pedidos = pedidoService.obtenerPorEstado(estado);
             } else {
                 pedidos = pedidoService.obtenerTodosPedidos();
             }
