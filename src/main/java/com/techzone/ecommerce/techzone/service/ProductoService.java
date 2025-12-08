@@ -33,6 +33,80 @@ public class ProductoService {
         this.imagenDAO = new ImagenProductoDAO();
     }
 
+    // ==================== MÉTODOS PARA HOME SERVLET ====================
+
+    /**
+     * Obtiene los productos más recientes con límite especificado
+     * Usado en la página principal para mostrar productos destacados
+     *
+     * @param limite Número máximo de productos a retornar
+     * @return Lista de productos recientes
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Producto> obtenerProductosRecientes(int limite) throws ServiceException {
+        logger.debug("Obteniendo {} productos más recientes", limite);
+
+        try {
+            if (limite <= 0) {
+                throw new ServiceException("El límite debe ser mayor a 0");
+            }
+
+            List<Producto> productos = productoDAO.obtenerMasRecientes(limite);
+
+            // Cargar información de categoría para cada producto
+            for (Producto producto : productos) {
+                Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
+                producto.setCategoria(categoria.orElse(null));
+            }
+
+            logger.debug("Se obtuvieron {} productos recientes", productos.size());
+            return productos;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener productos recientes: {}", e.getMessage(), e);
+            throw new ServiceException("Error al obtener productos recientes: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene productos que tienen descuento activo
+     * Usado en la página principal para mostrar ofertas
+     *
+     * @param limite Número máximo de productos a retornar
+     * @return Lista de productos con descuento ordenados por porcentaje de descuento
+     * @throws ServiceException Si hay error en la consulta
+     */
+    public List<Producto> obtenerProductosConDescuento(int limite) throws ServiceException {
+        logger.debug("Obteniendo {} productos con descuento", limite);
+
+        try {
+            if (limite <= 0) {
+                throw new ServiceException("El límite debe ser mayor a 0");
+            }
+
+            // Obtener todos los productos con descuento
+            List<Producto> productos = productoDAO.obtenerConDescuento();
+
+            // Cargar información de categoría para cada producto
+            for (Producto producto : productos) {
+                Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
+                producto.setCategoria(categoria.orElse(null));
+            }
+
+            // Limitar la cantidad de productos retornados
+            if (productos.size() > limite) {
+                productos = productos.subList(0, limite);
+            }
+
+            logger.debug("Se obtuvieron {} productos con descuento", productos.size());
+            return productos;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener productos con descuento: {}", e.getMessage(), e);
+            throw new ServiceException("Error al obtener productos con descuento: " + e.getMessage());
+        }
+    }
+
     // ==================== GESTIÓN DE PRODUCTOS ====================
 
     /**
@@ -238,29 +312,6 @@ public class ProductoService {
         } catch (SQLException e) {
             logger.error("Error al buscar productos", e);
             throw new ServiceException("Error al buscar productos", e);
-        }
-    }
-
-    /**
-     * Obtiene productos destacados (más recientes, con descuento, etc.)
-     */
-    public List<Producto> obtenerProductosDestacados(int limite) throws ServiceException {
-        try {
-            List<Producto> productos = productoDAO.obtenerMasRecientes(limite);
-
-            // Cargar imágenes principales
-            for (Producto producto : productos) {
-                Optional<ImagenProducto> imagen = imagenDAO.obtenerPrincipalPorProducto(
-                        producto.getIdProducto()
-                );
-                // Podemos guardar la URL en un campo transient si lo agregamos al modelo
-            }
-
-            return productos;
-
-        } catch (SQLException e) {
-            logger.error("Error al obtener productos destacados", e);
-            throw new ServiceException("Error al obtener productos destacados", e);
         }
     }
 
@@ -493,6 +544,83 @@ public class ProductoService {
         return ordenados;
     }
 
+    // ==================== MÉTODOS PARA ADMINISTRACIÓN ====================
+
+    /**
+     * Cuenta el total de productos en el sistema
+     */
+    public int contarProductos() throws ServiceException {
+        try {
+            return productoDAO.contarTodos();
+        } catch (SQLException e) {
+            logger.error("Error al contar productos: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos");
+        }
+    }
+
+    /**
+     * Cuenta productos con estado DISPONIBLE
+     */
+    public int contarProductosActivos() throws ServiceException {
+        try {
+            return productoDAO.contarActivos();
+        } catch (SQLException e) {
+            logger.error("Error al contar productos activos: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos activos");
+        }
+    }
+
+    /**
+     * Cuenta productos con stock bajo el mínimo especificado
+     */
+    public int contarProductosBajoStock(int stockMinimo) throws ServiceException {
+        try {
+            return productoDAO.contarBajoStock(stockMinimo);
+        } catch (SQLException e) {
+            logger.error("Error al contar productos bajo stock: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos bajo stock");
+        }
+    }
+
+    /**
+     * Obtiene lista de productos con stock bajo el mínimo
+     */
+    public List<Producto> obtenerProductosBajoStock(int stockMinimo, int limite)
+            throws ServiceException {
+        try {
+            return productoDAO.obtenerBajoStock(stockMinimo, limite);
+        } catch (SQLException e) {
+            logger.error("Error al obtener productos bajo stock: {}", e.getMessage());
+            throw new ServiceException("Error al obtener productos bajo stock");
+        }
+    }
+
+    /**
+     * Obtiene estadísticas completas de productos
+     */
+    public EstadisticasProductos obtenerEstadisticasProductos() throws ServiceException {
+        try {
+            EstadisticasProductos stats = new EstadisticasProductos();
+
+            stats.setTotalProductos(productoDAO.contarTodos());
+            stats.setProductosActivos(productoDAO.contarActivos());
+
+            int total = stats.getTotalProductos();
+            int activos = stats.getProductosActivos();
+            stats.setProductosInactivos(total - activos);
+
+            stats.setProductosSinStock(productoDAO.contarBajoStock(0));
+            stats.setProductosBajoStock(productoDAO.contarBajoStock(10));
+            stats.setValorInventario(productoDAO.calcularValorInventario().doubleValue());
+
+            return stats;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener estadísticas de productos: {}", e.getMessage());
+            throw new ServiceException("Error al obtener estadísticas de productos");
+        }
+    }
+
     // ==================== CLASES INTERNAS ====================
 
     public static class ProductoCompleto {
@@ -523,7 +651,6 @@ public class ProductoService {
         private int pagina = 1;
         private int productosPorPagina = 12;
 
-        // Getters y Setters
         public Integer getIdCategoria() { return idCategoria; }
         public void setIdCategoria(Integer idCategoria) { this.idCategoria = idCategoria; }
 
@@ -589,114 +716,7 @@ public class ProductoService {
     public enum OrdenProducto {
         PRECIO_ASC, PRECIO_DESC, NOMBRE_ASC, NOMBRE_DESC, MAS_RECIENTE
     }
-    // ==================== MÉTODOS PARA ADMINISTRACIÓN ====================
 
-    /**
-     * Cuenta el total de productos en el sistema
-     *
-     * @return Número total de productos
-     * @throws ServiceException Si hay error en la consulta
-     */
-    public int contarProductos() throws ServiceException {
-        try {
-            return productoDAO.contarTodos();
-        } catch (SQLException e) {
-            logger.error("Error al contar productos: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos");
-        }
-    }
-
-    /**
-     * Cuenta productos con estado DISPONIBLE
-     *
-     * @return Número de productos activos
-     * @throws ServiceException Si hay error en la consulta
-     */
-    public int contarProductosActivos() throws ServiceException {
-        try {
-            return productoDAO.contarActivos();
-        } catch (SQLException e) {
-            logger.error("Error al contar productos activos: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos activos");
-        }
-    }
-
-    /**
-     * Cuenta productos con stock bajo el mínimo especificado
-     * Útil para alertas de reabastecimiento
-     *
-     * @param stockMinimo Stock mínimo considerado como bajo
-     * @return Número de productos con stock bajo
-     * @throws ServiceException Si hay error en la consulta
-     */
-    public int contarProductosBajoStock(int stockMinimo) throws ServiceException {
-        try {
-            return productoDAO.contarBajoStock(stockMinimo);
-        } catch (SQLException e) {
-            logger.error("Error al contar productos bajo stock: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos bajo stock");
-        }
-    }
-
-    /**
-     * Obtiene lista de productos con stock bajo el mínimo
-     *
-     * @param stockMinimo Stock mínimo considerado como bajo
-     * @param limite Número máximo de productos a retornar
-     * @return Lista de productos con stock bajo
-     * @throws ServiceException Si hay error en la consulta
-     */
-    public List<Producto> obtenerProductosBajoStock(int stockMinimo, int limite)
-            throws ServiceException {
-        try {
-            return productoDAO.obtenerBajoStock(stockMinimo, limite);
-        } catch (SQLException e) {
-            logger.error("Error al obtener productos bajo stock: {}", e.getMessage());
-            throw new ServiceException("Error al obtener productos bajo stock");
-        }
-    }
-
-    /**
-     * Obtiene estadísticas completas de productos
-     * Incluye conteos de productos activos, inactivos, sin stock, etc.
-     *
-     * @return Objeto con estadísticas de productos
-     * @throws ServiceException Si hay error en la consulta
-     */
-    public EstadisticasProductos obtenerEstadisticasProductos() throws ServiceException {
-        try {
-            EstadisticasProductos stats = new EstadisticasProductos();
-
-            // Conteos básicos
-            stats.setTotalProductos(productoDAO.contarTodos());
-            stats.setProductosActivos(productoDAO.contarActivos());
-
-            // Calcular inactivos
-            int total = stats.getTotalProductos();
-            int activos = stats.getProductosActivos();
-            stats.setProductosInactivos(total - activos);
-
-            // Productos sin stock (stock = 0)
-            stats.setProductosSinStock(productoDAO.contarBajoStock(0));
-
-            // Productos con stock bajo (1-10 unidades)
-            stats.setProductosBajoStock(productoDAO.contarBajoStock(10));
-
-            // Valor total del inventario
-            stats.setValorInventario(productoDAO.calcularValorInventario().doubleValue());
-
-            return stats;
-
-        } catch (SQLException e) {
-            logger.error("Error al obtener estadísticas de productos: {}", e.getMessage());
-            throw new ServiceException("Error al obtener estadísticas de productos");
-        }
-    }
-
-    /**
-     * Clase para estadísticas de productos
-     * Utilizada en el dashboard administrativo
-     */
     public static class EstadisticasProductos {
         private int totalProductos;
         private int productosActivos;
@@ -705,7 +725,6 @@ public class ProductoService {
         private int productosBajoStock;
         private double valorInventario;
 
-        // Getters y setters
         public int getTotalProductos() { return totalProductos; }
         public void setTotalProductos(int totalProductos) {
             this.totalProductos = totalProductos;
