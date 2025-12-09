@@ -99,6 +99,12 @@ public class Producto implements Serializable {
      */
     private transient BigDecimal precioOriginal;
 
+    /**
+     * Indica si el producto es nuevo (registrado en los últimos 30 días)
+     * Campo calculado basado en fechaRegistro
+     */
+    private transient Boolean esNuevo;
+
     // ==================== ENUM ====================
 
     /**
@@ -316,6 +322,32 @@ public class Producto implements Serializable {
      */
     public void setPrecioOriginal(BigDecimal precioOriginal) {
         this.precioOriginal = precioOriginal;
+    }
+
+    /**
+     * Obtiene si el producto es nuevo (registrado en los últimos 30 días)
+     * 
+     * @return true si el producto fue registrado en los últimos 30 días, false en caso contrario
+     */
+    public Boolean getEsNuevo() {
+        if (esNuevo != null) {
+            return esNuevo;
+        }
+        // Calcular automáticamente si no está establecido
+        if (fechaRegistro == null) {
+            return false;
+        }
+        LocalDateTime hace30Dias = LocalDateTime.now().minusDays(30);
+        return fechaRegistro.isAfter(hace30Dias);
+    }
+
+    /**
+     * Establece manualmente si el producto es nuevo
+     * 
+     * @param esNuevo true si es nuevo, false en caso contrario
+     */
+    public void setEsNuevo(Boolean esNuevo) {
+        this.esNuevo = esNuevo;
     }
 
     // ==================== MÉTODOS DE NEGOCIO ====================
