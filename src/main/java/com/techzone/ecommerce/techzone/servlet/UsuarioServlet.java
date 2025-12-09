@@ -16,7 +16,8 @@ import java.io.IOException;
 
 /**
  * Servlet para gestión de usuarios: registro, login, logout, perfil
- * 
+ * Maneja todas las operaciones relacionadas con usuarios
+ *
  * @author TechZone Team
  */
 @WebServlet(name = "UsuarioServlet", urlPatterns = {
@@ -163,15 +164,21 @@ public class UsuarioServlet extends HttpServlet {
 
         try {
             Integer idUsuario = SessionUtil.getIdUsuario(request);
-            Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
-            request.setAttribute("usuario", usuario);
 
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            // Obtener usuario actualizado de la base de datos
+            Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
+
+            // Actualizar usuario en sesión
+            request.getSession().setAttribute("usuario", usuario);
+
+            logger.debug("Mostrando perfil de usuario ID: {}", idUsuario);
+
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al obtener perfil: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar el perfil");
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
         }
     }
 
@@ -322,6 +329,8 @@ public class UsuarioServlet extends HttpServlet {
         String telefono = request.getParameter("telefono");
         String direccion = request.getParameter("direccion");
 
+        logger.debug("Actualizando perfil de usuario ID: {}", idUsuario);
+
         try {
             // Obtener usuario actual para mantener datos que no se modifican
             Usuario usuarioActual = usuarioService.obtenerUsuarioPorId(idUsuario);
@@ -341,29 +350,24 @@ public class UsuarioServlet extends HttpServlet {
             logger.info("Perfil actualizado: {}", email);
 
             request.setAttribute("mensaje", "Perfil actualizado correctamente");
-            request.setAttribute("usuario", usuarioActual);
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            request.setAttribute("tabActiva", "info");
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al actualizar perfil: {}", e.getMessage());
 
             request.setAttribute("error", e.getMessage());
+            request.setAttribute("tabActiva", "info");
+
             // Intentar cargar usuario actual
             try {
                 Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
-                request.setAttribute("usuario", usuario);
+                request.getSession().setAttribute("usuario", usuario);
             } catch (ServiceException ex) {
-                // Si falla, usar datos del formulario
-                Usuario usuario = new Usuario();
-                usuario.setNombre(nombre);
-                usuario.setApellido(apellido);
-                usuario.setEmail(email);
-                usuario.setTelefono(telefono);
-                usuario.setDireccion(direccion);
-                request.setAttribute("usuario", usuario);
+                logger.error("Error al recargar usuario: {}", ex.getMessage());
             }
 
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
         }
     }
 
@@ -384,30 +388,23 @@ public class UsuarioServlet extends HttpServlet {
         String nuevaPassword = request.getParameter("nuevaPassword");
         String confirmarPassword = request.getParameter("confirmarPassword");
 
+        logger.debug("Cambiando contraseña para usuario ID: {}", idUsuario);
+
         try {
             usuarioService.cambiarPassword(idUsuario, passwordActual, nuevaPassword, confirmarPassword);
 
             logger.info("Contraseña cambiada para usuario ID: {}", idUsuario);
 
-            // Cargar usuario para la vista
-            Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
-            request.setAttribute("usuario", usuario);
             request.setAttribute("mensaje", "Contraseña actualizada correctamente");
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            request.setAttribute("tabActiva", "password");
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al cambiar contraseña: {}", e.getMessage());
 
-            try {
-                Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
-                request.setAttribute("usuario", usuario);
-            } catch (ServiceException ex) {
-                // Ignorar
-            }
-
             request.setAttribute("error", e.getMessage());
             request.setAttribute("tabActiva", "password");
-            request.getRequestDispatcher("/views/perfil.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/perfil.jsp").forward(request, response);
         }
     }
 }

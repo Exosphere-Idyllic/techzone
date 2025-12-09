@@ -519,31 +519,31 @@
             <div class="tab-pane fade ${tabActiva == 'password' ? 'show active' : ''}"
                  id="password"
                  role="tabpanel">
-                <form action="${pageContext.request.contextPath}/perfil/cambiar-password" method="POST">
+                <form action="${pageContext.request.contextPath}/perfil/cambiar-password" method="POST" id="formPassword">
                     <div class="form-group">
-                        <label for="currentPassword" class="form-label">Contraseña Actual</label>
+                        <label for="passwordActual" class="form-label">Contraseña Actual</label>
                         <div class="input-wrapper">
                             <input type="password"
                                    class="form-control"
-                                   id="currentPassword"
-                                   name="currentPassword"
+                                   id="passwordActual"
+                                   name="passwordActual"
                                    required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')">
+                            <button type="button" class="password-toggle" onclick="togglePassword('passwordActual')">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="newPassword" class="form-label">Nueva Contraseña</label>
+                        <label for="nuevaPassword" class="form-label">Nueva Contraseña</label>
                         <div class="input-wrapper">
                             <input type="password"
                                    class="form-control"
-                                   id="newPassword"
-                                   name="newPassword"
+                                   id="nuevaPassword"
+                                   name="nuevaPassword"
                                    required
                                    minlength="8">
-                            <button type="button" class="password-toggle" onclick="togglePassword('newPassword')">
+                            <button type="button" class="password-toggle" onclick="togglePassword('nuevaPassword')">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
@@ -551,15 +551,15 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="confirmPassword" class="form-label">Confirmar Nueva Contraseña</label>
+                        <label for="confirmarPassword" class="form-label">Confirmar Nueva Contraseña</label>
                         <div class="input-wrapper">
                             <input type="password"
                                    class="form-control"
-                                   id="confirmPassword"
-                                   name="confirmPassword"
+                                   id="confirmarPassword"
+                                   name="confirmarPassword"
                                    required
                                    minlength="8">
-                            <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmarPassword')">
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
@@ -615,13 +615,14 @@
     }
 
     // Password validation
-    document.querySelector('#password form')?.addEventListener('submit', function(e) {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+    document.getElementById('formPassword').addEventListener('submit', function(e) {
+        const nuevaPassword = document.getElementById('nuevaPassword').value;
+        const confirmarPassword = document.getElementById('confirmarPassword').value;
 
-        if (newPassword !== confirmPassword) {
+        if (nuevaPassword !== confirmarPassword) {
             e.preventDefault();
             alert('Las contraseñas no coinciden');
+            return false;
         }
     });
 
