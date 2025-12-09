@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.service;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.dao.CategoriaDAO;
 import com.techzone.ecommerce.techzone.model.Categoria;
 import org.slf4j.Logger;
