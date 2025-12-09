@@ -2,6 +2,9 @@ package com.techzone.ecommerce.techzone.model;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Objects;
 
 public class Usuario implements Serializable {
@@ -124,9 +127,36 @@ public class Usuario implements Serializable {
         this.direccion = direccion;
     }
 
-    // Método auxiliar para obtener el nombre completo
+    // ✅ MÉTODOS AUXILIARES AGREGADOS
+
+    /**
+     * Método auxiliar para obtener el nombre completo
+     */
     public String getNombreCompleto() {
         return nombre + " " + apellido;
+    }
+
+    /**
+     * Convierte LocalDateTime a Date para compatibilidad con fmt:formatDate
+     * @return Date para usar en JSP con fmt:formatDate
+     */
+    public Date getFechaRegistroAsDate() {
+        if (fechaRegistro == null) {
+            return null;
+        }
+        return Date.from(fechaRegistro.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    /**
+     * Retorna la fecha formateada como String
+     * @return String con formato dd/MM/yyyy
+     */
+    public String getFechaRegistroFormatted() {
+        if (fechaRegistro == null) {
+            return "";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return fechaRegistro.format(formatter);
     }
 
     @Override

@@ -399,7 +399,11 @@
             <div class="profile-stats">
                 <div class="stat-item">
                     <div class="stat-value">
-                        <fmt:formatDate value="${sessionScope.usuario.fechaRegistro}" pattern="dd/MM/yyyy"/>
+                        <%-- OPCIÓN 1: Usar método helper que retorna String --%>
+                        ${sessionScope.usuario.fechaRegistroFormatted}
+
+                        <%-- OPCIÓN 2: Usar método que convierte a Date --%>
+                        <%-- <fmt:formatDate value="${sessionScope.usuario.fechaRegistroAsDate}" pattern="dd/MM/yyyy"/> --%>
                     </div>
                     <div class="stat-label">Miembro desde</div>
                 </div>
