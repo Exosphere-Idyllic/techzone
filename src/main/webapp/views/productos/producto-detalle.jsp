@@ -726,7 +726,7 @@
         <span>/</span>
         <c:if test="${not empty producto.categoria}">
             <a href="${pageContext.request.contextPath}/productos?categoria=${producto.categoria.idCategoria}">
-                ${producto.categoria.nombre}
+                    ${producto.categoria.nombre}
             </a>
             <span>/</span>
         </c:if>
@@ -754,8 +754,8 @@
         <div class="product-gallery">
             <div class="main-image-wrapper" id="mainImageWrapper">
                 <c:choose>
-                    <c:when test="${not empty producto.imagenPrincipal}">
-                        <img src="${pageContext.request.contextPath}/uploads/${producto.imagenPrincipal}"
+                    <c:when test="${not empty imagenPrincipal}">
+                        <img src="${pageContext.request.contextPath}/uploads/${imagenPrincipal}"
                              alt="${producto.nombre}"
                              class="main-image"
                              id="mainImage">
@@ -771,14 +771,13 @@
                 </c:choose>
             </div>
 
-            <c:if test="${not empty producto.imagenesSecundarias}">
+            <c:if test="${not empty imagenes}">
                 <div class="thumbnail-list">
-                    <div class="thumbnail active" onclick="changeImage('${pageContext.request.contextPath}/uploads/${producto.imagenPrincipal}', this)">
-                        <img src="${pageContext.request.contextPath}/uploads/${producto.imagenPrincipal}" alt="Imagen 1">
-                    </div>
-                    <c:forEach items="${producto.imagenesSecundarias}" var="imagen" varStatus="status">
-                        <div class="thumbnail" onclick="changeImage('${pageContext.request.contextPath}/uploads/${imagen}', this)">
-                            <img src="${pageContext.request.contextPath}/uploads/${imagen}" alt="Imagen ${status.index + 2}">
+                    <c:forEach items="${imagenes}" var="imagen" varStatus="status">
+                        <div class="thumbnail ${status.index == 0 ? 'active' : ''}"
+                             onclick="changeImage('${pageContext.request.contextPath}/uploads/${imagen.urlImagen}', this)">
+                            <img src="${pageContext.request.contextPath}/uploads/${imagen.urlImagen}"
+                                 alt="Imagen ${status.index + 1}">
                         </div>
                     </c:forEach>
                 </div>
@@ -888,11 +887,11 @@
                             <button type="button" class="qty-btn" onclick="decreaseQuantity()">
                                 <i class="fas fa-minus"></i>
                             </button>
-                            <input type="number" 
-                                   id="quantity" 
-                                   class="qty-input" 
-                                   value="1" 
-                                   min="1" 
+                            <input type="number"
+                                   id="quantity"
+                                   class="qty-input"
+                                   value="1"
+                                   min="1"
                                    max="${producto.stock}"
                                    readonly>
                             <button type="button" class="qty-btn" onclick="increaseQuantity()">
@@ -908,11 +907,11 @@
             <form action="${pageContext.request.contextPath}/carrito/agregar" method="POST" id="addToCartForm">
                 <input type="hidden" name="idProducto" value="${producto.idProducto}">
                 <input type="hidden" name="cantidad" id="cantidadInput" value="1">
-                
+
                 <div class="action-buttons">
-                    <button type="submit" 
-                            class="btn-primary" 
-                            ${producto.stock == 0 ? 'disabled' : ''}>
+                    <button type="submit"
+                            class="btn-primary"
+                    ${producto.stock == 0 ? 'disabled' : ''}>
                         <i class="fas fa-shopping-cart"></i>
                         <span>${producto.stock == 0 ? 'Agotado' : 'Agregar al Carrito'}</span>
                     </button>
@@ -1054,7 +1053,7 @@
                         </div>
                     </div>
                 </c:if>
-                
+
                 <c:if test="${not empty sessionScope.usuario}">
                     <button class="btn-write-review" onclick="window.location.href='${pageContext.request.contextPath}/producto/resena?id=${producto.idProducto}'">
                         <i class="fas fa-pencil-alt"></i> Escribir Reseña
@@ -1100,7 +1099,7 @@
         <section class="related-section">
             <div class="section-header">
                 <h2 class="section-title">Productos Relacionados</h2>
-                <a href="${pageContext.request.contextPath}/productos?categoria=${producto.categoria.idCategoria}" 
+                <a href="${pageContext.request.contextPath}/productos?categoria=${producto.categoria.idCategoria}"
                    class="btn-view-all">
                     Ver todos <i class="fas fa-arrow-right"></i>
                 </a>
@@ -1125,7 +1124,7 @@
         const input = document.getElementById('quantity');
         const max = parseInt(input.max);
         const current = parseInt(input.value);
-        
+
         if (current < max) {
             input.value = current + 1;
             document.getElementById('cantidadInput').value = current + 1;
@@ -1135,7 +1134,7 @@
     function decreaseQuantity() {
         const input = document.getElementById('quantity');
         const current = parseInt(input.value);
-        
+
         if (current > 1) {
             input.value = current - 1;
             document.getElementById('cantidadInput').value = current - 1;
@@ -1145,7 +1144,7 @@
     // Change main image
     function changeImage(imageSrc, thumbnail) {
         document.getElementById('mainImage').src = imageSrc;
-        
+
         // Update active thumbnail
         document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
         thumbnail.classList.add('active');
