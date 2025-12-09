@@ -1,6 +1,5 @@
 package com.techzone.ecommerce.techzone.service;
 
-import com.google.protobuf.ServiceException;
 import com.techzone.ecommerce.techzone.dao.CategoriaDAO;
 import com.techzone.ecommerce.techzone.dao.ImagenProductoDAO;
 import com.techzone.ecommerce.techzone.dao.ProductoDAO;
@@ -18,7 +17,10 @@ import java.util.Optional;
 
 /**
  * Servicio de lógica de negocio para gestión de productos
+ * Capa intermedia entre servlets y DAOs
+ *
  * @author TechZone Team
+ * @version 2.0 - Compatible con Producto v2.0 y ProductoServlet optimizado
  */
 public class ProductoService {
 
@@ -31,6 +33,7 @@ public class ProductoService {
         this.productoDAO = new ProductoDAO();
         this.categoriaDAO = new CategoriaDAO();
         this.imagenDAO = new ImagenProductoDAO();
+        logger.debug("ProductoService inicializado");
     }
 
     // ==================== MÉTODOS PARA HOME SERVLET ====================
@@ -52,8 +55,6 @@ public class ProductoService {
             }
 
             List<Producto> productos = productoDAO.obtenerMasRecientes(limite);
-
-            // NO cargar categorías aquí - ya las tiene el HomeServlet
 
             logger.debug("Se obtuvieron {} productos recientes", productos.size());
             return productos;
@@ -82,8 +83,6 @@ public class ProductoService {
 
             List<Producto> productos = productoDAO.obtenerConDescuento();
 
-            // NO cargar categorías aquí
-
             // Limitar la cantidad de productos retornados
             if (productos.size() > limite) {
                 productos = productos.subList(0, limite);
@@ -102,9 +101,11 @@ public class ProductoService {
 
     /**
      * Crea un nuevo producto con sus imágenes
+     *
      * @param producto Producto a crear
      * @param urlImagenes Lista de URLs de imágenes
      * @return ID del producto creado
+     * @throws ServiceException Si hay error en la operación
      */
     public int crearProducto(Producto producto, List<String> urlImagenes)
             throws ServiceException {
@@ -147,12 +148,15 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al crear producto", e);
-            throw new ServiceException("Error al crear producto: " + e.getMessage(), e);
+            throw new ServiceException("Error al crear producto: " + e.getMessage());
         }
     }
 
     /**
      * Actualiza un producto existente
+     *
+     * @param producto Producto con datos actualizados
+     * @throws ServiceException Si hay error en la operación
      */
     public void actualizarProducto(Producto producto) throws ServiceException {
         logger.info("Actualizando producto: {}", producto.getIdProducto());
@@ -184,12 +188,15 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al actualizar producto", e);
-            throw new ServiceException("Error al actualizar producto", e);
+            throw new ServiceException("Error al actualizar producto: " + e.getMessage());
         }
     }
 
     /**
      * Elimina un producto
+     *
+     * @param idProducto ID del producto a eliminar
+     * @throws ServiceException Si hay error en la operación
      */
     public void eliminarProducto(int idProducto) throws ServiceException {
         logger.info("Eliminando producto: {}", idProducto);
@@ -212,7 +219,7 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al eliminar producto", e);
-            throw new ServiceException("Error al eliminar producto: " + e.getMessage(), e);
+            throw new ServiceException("Error al eliminar producto: " + e.getMessage());
         }
     }
 
@@ -220,6 +227,10 @@ public class ProductoService {
 
     /**
      * Obtiene un producto por ID con su categoría e imágenes
+     *
+     * @param idProducto ID del producto
+     * @return ProductoCompleto con producto, imágenes y categoría
+     * @throws ServiceException Si hay error en la operación
      */
     public ProductoCompleto obtenerProductoCompleto(int idProducto) throws ServiceException {
         try {
@@ -245,12 +256,16 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al obtener producto completo", e);
-            throw new ServiceException("Error al obtener producto", e);
+            throw new ServiceException("Error al obtener producto: " + e.getMessage());
         }
     }
 
     /**
      * Busca productos con filtros y paginación
+     *
+     * @param filtros Objeto FiltroProductos con criterios de búsqueda
+     * @return ResultadoBusqueda con productos y metadatos de paginación
+     * @throws ServiceException Si hay error en la operación
      */
     public ResultadoBusqueda buscarProductos(FiltroProductos filtros) throws ServiceException {
         try {
@@ -302,7 +317,7 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al buscar productos", e);
-            throw new ServiceException("Error al buscar productos", e);
+            throw new ServiceException("Error al buscar productos: " + e.getMessage());
         }
     }
 
@@ -310,18 +325,27 @@ public class ProductoService {
 
     /**
      * Verifica si hay stock suficiente de un producto
+     *
+     * @param idProducto ID del producto
+     * @param cantidad Cantidad requerida
+     * @return true si hay stock suficiente
+     * @throws ServiceException Si hay error en la operación
      */
     public boolean verificarDisponibilidad(int idProducto, int cantidad) throws ServiceException {
         try {
             return productoDAO.verificarStock(idProducto, cantidad);
         } catch (SQLException e) {
             logger.error("Error al verificar disponibilidad", e);
-            throw new ServiceException("Error al verificar disponibilidad", e);
+            throw new ServiceException("Error al verificar disponibilidad: " + e.getMessage());
         }
     }
 
     /**
      * Actualiza el stock de un producto
+     *
+     * @param idProducto ID del producto
+     * @param nuevoStock Nuevo valor de stock
+     * @throws ServiceException Si hay error en la operación
      */
     public void actualizarStock(int idProducto, int nuevoStock) throws ServiceException {
         logger.info("Actualizando stock del producto {} a {}", idProducto, nuevoStock);
@@ -353,13 +377,17 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al actualizar stock", e);
-            throw new ServiceException("Error al actualizar stock", e);
+            throw new ServiceException("Error al actualizar stock: " + e.getMessage());
         }
     }
 
     /**
      * Reduce el stock de un producto (para ventas)
+     *
+     * @param idProducto ID del producto
+     * @param cantidad Cantidad a reducir
      * @return true si se pudo reducir, false si no hay stock suficiente
+     * @throws ServiceException Si hay error en la operación
      */
     public boolean reducirStock(int idProducto, int cantidad) throws ServiceException {
         logger.info("Reduciendo stock del producto {} en {}", idProducto, cantidad);
@@ -390,7 +418,7 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al reducir stock", e);
-            throw new ServiceException("Error al reducir stock", e);
+            throw new ServiceException("Error al reducir stock: " + e.getMessage());
         }
     }
 
@@ -398,6 +426,10 @@ public class ProductoService {
 
     /**
      * Agrega múltiples imágenes a un producto
+     *
+     * @param idProducto ID del producto
+     * @param urlImagenes Lista de URLs de imágenes
+     * @throws SQLException Si hay error en la operación
      */
     private void agregarImagenesAProducto(int idProducto, List<String> urlImagenes)
             throws SQLException {
@@ -418,6 +450,11 @@ public class ProductoService {
 
     /**
      * Agrega una imagen a un producto
+     *
+     * @param idProducto ID del producto
+     * @param urlImagen URL de la imagen
+     * @param esPrincipal Si es imagen principal
+     * @throws ServiceException Si hay error en la operación
      */
     public void agregarImagen(int idProducto, String urlImagen, boolean esPrincipal)
             throws ServiceException {
@@ -433,12 +470,15 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al agregar imagen", e);
-            throw new ServiceException("Error al agregar imagen", e);
+            throw new ServiceException("Error al agregar imagen: " + e.getMessage());
         }
     }
 
     /**
      * Elimina una imagen de un producto
+     *
+     * @param idImagen ID de la imagen
+     * @throws ServiceException Si hay error en la operación
      */
     public void eliminarImagen(int idImagen) throws ServiceException {
         try {
@@ -450,7 +490,7 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al eliminar imagen", e);
-            throw new ServiceException("Error al eliminar imagen", e);
+            throw new ServiceException("Error al eliminar imagen: " + e.getMessage());
         }
     }
 
@@ -458,6 +498,9 @@ public class ProductoService {
 
     /**
      * Valida los datos de un producto
+     *
+     * @param producto Producto a validar
+     * @throws ServiceException Si la validación falla
      */
     private void validarProducto(Producto producto) throws ServiceException {
         if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
@@ -486,9 +529,14 @@ public class ProductoService {
 
     /**
      * Filtra productos por rango de precio
+     *
+     * @param productos Lista de productos
+     * @param minimo Precio mínimo
+     * @param maximo Precio máximo
+     * @return Lista filtrada
      */
     private List<Producto> filtrarPorRangoPrecio(List<Producto> productos,
-                                                 BigDecimal minimo, BigDecimal maximo) {
+                                                  BigDecimal minimo, BigDecimal maximo) {
         List<Producto> filtrados = new ArrayList<>();
 
         for (Producto producto : productos) {
@@ -506,6 +554,10 @@ public class ProductoService {
 
     /**
      * Ordena la lista de productos según el criterio especificado
+     *
+     * @param productos Lista de productos
+     * @param orden Criterio de ordenamiento
+     * @return Lista ordenada
      */
     private List<Producto> ordenarProductos(List<Producto> productos, OrdenProducto orden) {
         if (orden == null) {
@@ -539,42 +591,57 @@ public class ProductoService {
 
     /**
      * Cuenta el total de productos en el sistema
+     *
+     * @return Número total de productos
+     * @throws ServiceException Si hay error en la operación
      */
     public int contarProductos() throws ServiceException {
         try {
             return productoDAO.contarTodos();
         } catch (SQLException e) {
             logger.error("Error al contar productos: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos");
+            throw new ServiceException("Error al contar productos: " + e.getMessage());
         }
     }
 
     /**
      * Cuenta productos con estado DISPONIBLE
+     *
+     * @return Número de productos activos
+     * @throws ServiceException Si hay error en la operación
      */
     public int contarProductosActivos() throws ServiceException {
         try {
             return productoDAO.contarActivos();
         } catch (SQLException e) {
             logger.error("Error al contar productos activos: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos activos");
+            throw new ServiceException("Error al contar productos activos: " + e.getMessage());
         }
     }
 
     /**
      * Cuenta productos con stock bajo el mínimo especificado
+     *
+     * @param stockMinimo Stock mínimo
+     * @return Número de productos con stock bajo
+     * @throws ServiceException Si hay error en la operación
      */
     public int contarProductosBajoStock(int stockMinimo) throws ServiceException {
         try {
             return productoDAO.contarBajoStock(stockMinimo);
         } catch (SQLException e) {
             logger.error("Error al contar productos bajo stock: {}", e.getMessage());
-            throw new ServiceException("Error al contar productos bajo stock");
+            throw new ServiceException("Error al contar productos bajo stock: " + e.getMessage());
         }
     }
 
     /**
      * Obtiene lista de productos con stock bajo el mínimo
+     *
+     * @param stockMinimo Stock mínimo
+     * @param limite Límite de resultados
+     * @return Lista de productos con stock bajo
+     * @throws ServiceException Si hay error en la operación
      */
     public List<Producto> obtenerProductosBajoStock(int stockMinimo, int limite)
             throws ServiceException {
@@ -582,12 +649,15 @@ public class ProductoService {
             return productoDAO.obtenerBajoStock(stockMinimo, limite);
         } catch (SQLException e) {
             logger.error("Error al obtener productos bajo stock: {}", e.getMessage());
-            throw new ServiceException("Error al obtener productos bajo stock");
+            throw new ServiceException("Error al obtener productos bajo stock: " + e.getMessage());
         }
     }
 
     /**
      * Obtiene estadísticas completas de productos
+     *
+     * @return EstadisticasProductos con métricas del sistema
+     * @throws ServiceException Si hay error en la operación
      */
     public EstadisticasProductos obtenerEstadisticasProductos() throws ServiceException {
         try {
@@ -608,14 +678,15 @@ public class ProductoService {
 
         } catch (SQLException e) {
             logger.error("Error al obtener estadísticas de productos: {}", e.getMessage());
-            throw new ServiceException("Error al obtener estadísticas de productos");
+            throw new ServiceException("Error al obtener estadísticas de productos: " + e.getMessage());
         }
     }
 
-
-
     // ==================== CLASES INTERNAS ====================
 
+    /**
+     * Clase contenedora para producto completo con imágenes
+     */
     public static class ProductoCompleto {
         private final Producto producto;
         private final List<ImagenProducto> imagenes;
@@ -633,6 +704,9 @@ public class ProductoService {
         public ImagenProducto getImagenPrincipal() { return imagenPrincipal; }
     }
 
+    /**
+     * Clase para filtros de búsqueda de productos
+     */
     public static class FiltroProductos {
         private Integer idCategoria;
         private String terminoBusqueda;
@@ -684,6 +758,9 @@ public class ProductoService {
         }
     }
 
+    /**
+     * Clase para resultados de búsqueda con paginación
+     */
     public static class ResultadoBusqueda {
         private final List<Producto> productos;
         private final int totalProductos;
@@ -706,10 +783,20 @@ public class ProductoService {
         public boolean tienePaginaSiguiente() { return paginaActual < totalPaginas; }
     }
 
+    /**
+     * Enum para ordenamiento de productos
+     */
     public enum OrdenProducto {
-        PRECIO_ASC, PRECIO_DESC, NOMBRE_ASC, NOMBRE_DESC, MAS_RECIENTE
+        PRECIO_ASC, 
+        PRECIO_DESC, 
+        NOMBRE_ASC, 
+        NOMBRE_DESC, 
+        MAS_RECIENTE
     }
 
+    /**
+     * Clase para estadísticas de productos
+     */
     public static class EstadisticasProductos {
         private int totalProductos;
         private int productosActivos;
@@ -746,6 +833,19 @@ public class ProductoService {
         public double getValorInventario() { return valorInventario; }
         public void setValorInventario(double valorInventario) {
             this.valorInventario = valorInventario;
+        }
+    }
+
+    /**
+     * Excepción personalizada para errores de servicio
+     */
+    public static class ServiceException extends Exception {
+        public ServiceException(String message) {
+            super(message);
+        }
+
+        public ServiceException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }
