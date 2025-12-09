@@ -414,8 +414,8 @@
     </h1>
     <p class="page-subtitle">
         <c:choose>
-            <c:when test="${not empty carrito and carrito.size() > 0}">
-                ${carrito.size()} producto(s) en tu carrito
+            <c:when test="${not empty carrito and carrito.items.size() > 0}">
+                ${carrito.items.size()} producto(s) en tu carrito
             </c:when>
             <c:otherwise>
                 Tu carrito está vacío
@@ -439,7 +439,7 @@
     </c:if>
 
     <c:choose>
-        <c:when test="${not empty carrito and carrito.size() > 0}">
+        <c:when test="${not empty carrito and carrito.items.size() > 0}">
             <!-- Cart Layout -->
             <div class="cart-layout">
                 <!-- Cart Items -->
