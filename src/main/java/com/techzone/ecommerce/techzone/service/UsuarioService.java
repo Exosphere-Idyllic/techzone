@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.service;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.dao.UsuarioDAO;
 import com.techzone.ecommerce.techzone.model.Usuario;
 import com.techzone.ecommerce.techzone.util.PasswordUtil;
