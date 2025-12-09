@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
  * Clase para gestionar la conexión a la base de datos MySQL
@@ -16,6 +17,7 @@ import java.util.Properties;
  */
 public class DatabaseConnection {
 
+    private static final Logger LOGGER = Logger.getLogger(DatabaseConnection.class.getName());
     private static DatabaseConnection instance;
     private Connection connection;
     private String url;
@@ -34,13 +36,13 @@ public class DatabaseConnection {
             // Cargar el driver de MySQL
             Class.forName(driver);
 
-            System.out.println("✅ Driver MySQL cargado correctamente");
+            LOGGER.info("Driver MySQL cargado correctamente");
 
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ Error: Driver MySQL no encontrado");
+            LOGGER.severe("Error: Driver MySQL no encontrado");
             e.printStackTrace();
         } catch (IOException e) {
-            System.err.println("❌ Error: No se pudo cargar db.properties");
+            LOGGER.severe("Error: No se pudo cargar db.properties");
             e.printStackTrace();
         }
     }
@@ -56,7 +58,7 @@ public class DatabaseConnection {
                 .getResourceAsStream("db.properties")) {
 
             if (input == null) {
-                System.err.println("❌ Error: Archivo db.properties no encontrado");
+                LOGGER.severe("Error: Archivo db.properties no encontrado");
                 throw new IOException("db.properties no encontrado en resources");
             }
 
@@ -68,9 +70,9 @@ public class DatabaseConnection {
             this.password = props.getProperty("db.password");
             this.driver = props.getProperty("db.driver");
 
-            System.out.println("✅ Propiedades de BD cargadas correctamente");
-            System.out.println("📍 URL: " + this.url);
-            System.out.println("👤 Usuario: " + this.user);
+            LOGGER.info("Propiedades de BD cargadas correctamente");
+            LOGGER.info("URL: " + this.url);
+            LOGGER.info("Usuario: " + this.user);
 
         }
     }
@@ -93,19 +95,21 @@ public class DatabaseConnection {
 
     /**
      * Obtener una conexión a la base de datos
+     * Reutiliza la conexión existente si está activa
      *
      * @return Objeto Connection
      * @throws SQLException Si hay error en la conexión
      */
     public Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
+        // Verificar si la conexión existe y está activa
+        if (connection == null || connection.isClosed() || !connection.isValid(2)) {
             try {
                 connection = DriverManager.getConnection(url, user, password);
-                System.out.println("✅ Conexión establecida con la base de datos");
+                LOGGER.info("Conexion establecida con la base de datos");
             } catch (SQLException e) {
-                System.err.println("❌ Error al conectar con la base de datos");
-                System.err.println("   URL: " + url);
-                System.err.println("   Usuario: " + user);
+                LOGGER.severe("Error al conectar con la base de datos");
+                LOGGER.severe("URL: " + url);
+                LOGGER.severe("Usuario: " + user);
                 throw e;
             }
         }
@@ -119,10 +123,10 @@ public class DatabaseConnection {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("✅ Conexión cerrada correctamente");
+                LOGGER.info("Conexion cerrada correctamente");
             }
         } catch (SQLException e) {
-            System.err.println("❌ Error al cerrar la conexión");
+            LOGGER.severe("Error al cerrar la conexion");
             e.printStackTrace();
         }
     }
@@ -149,12 +153,12 @@ public class DatabaseConnection {
         try {
             Connection conn = getConnection();
             if (conn != null && !conn.isClosed()) {
-                System.out.println("✅ Test de conexión EXITOSO");
-                System.out.println("   Database: " + conn.getCatalog());
+                LOGGER.info("Test de conexion EXITOSO");
+                LOGGER.info("Database: " + conn.getCatalog());
                 return true;
             }
         } catch (SQLException e) {
-            System.err.println("❌ Test de conexión FALLIDO");
+            LOGGER.severe("Test de conexion FALLIDO");
             e.printStackTrace();
         }
         return false;

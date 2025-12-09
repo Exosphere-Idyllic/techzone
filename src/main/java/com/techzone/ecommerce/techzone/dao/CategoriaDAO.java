@@ -58,9 +58,8 @@ public class CategoriaDAO {
     /**
      * Busca una categoría por su ID
      */
-    public Categoria buscarPorId(int id) {
-
-        String sql = "SELECT * FROM categoria WHERE id_categoria = ?";
+    public Optional<Categoria> buscarPorId(int id) throws SQLException {
+        String sql = "SELECT * FROM categorias WHERE id_categoria = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -69,15 +68,12 @@ public class CategoriaDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return mapearCategoria(rs);
+                    return Optional.of(mapearCategoria(rs));
                 }
             }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al buscar categoría por ID", e);
         }
 
-        return null;
+        return Optional.empty();
     }
 
     /**

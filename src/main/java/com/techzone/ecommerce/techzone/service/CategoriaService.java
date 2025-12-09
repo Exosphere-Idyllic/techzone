@@ -211,7 +211,7 @@ public class CategoriaService {
             }
 
             // Si se está desactivando, verificar que no tenga productos asociados
-            if (nuevoEstado == Categoria.EstadoCategoria.INACTIVA) {
+            if (nuevoEstado == Categoria.EstadoCategoria.INACTIVO) {
                 int cantidadProductos = categoriaDAO.contarProductosPorCategoria(idCategoria);
                 if (cantidadProductos > 0) {
                     throw new ServiceException(
