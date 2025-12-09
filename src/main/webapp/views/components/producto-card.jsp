@@ -392,7 +392,7 @@
                         <span class="star ${i <= producto.promedioCalificacion ? '' : 'empty'}">★</span>
                     </c:forEach>
                 </div>
-                <span class="rating-count">(${producto.totalReseñas})</span>
+                <span class="rating-count">(${producto.totalCalificaciones})</span>
             </div>
         </c:if>
     </div>
