@@ -825,7 +825,7 @@
                             </c:forEach>
                         </div>
                         <span class="rating-text">
-                            ${producto.promedioCalificacion} (${producto.totalReseñas} reseñas)
+                            ${producto.promedioCalificacion} (${producto.totalCalificaciones} reseñas)
                         </span>
                     </div>
                 </c:if>
@@ -966,7 +966,7 @@
                 Especificaciones
             </button>
             <button class="tab-btn" onclick="openTab(event, 'reviews')">
-                Reseñas (${producto.totalReseñas})
+                Reseñas (${producto.totalCalificaciones})
             </button>
         </div>
 
@@ -1049,7 +1049,7 @@
                                     <span class="star ${i <= producto.promedioCalificacion ? '' : 'empty'}">★</span>
                                 </c:forEach>
                             </div>
-                            <div>${producto.totalReseñas} reseñas</div>
+                            <div>${producto.totalCalificaciones} reseñas</div>
                         </div>
                     </div>
                 </c:if>
