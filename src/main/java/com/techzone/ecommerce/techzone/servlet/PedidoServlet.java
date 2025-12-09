@@ -169,7 +169,7 @@ public class PedidoServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/carrito/checkout.jsp").forward(request, response);
 
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al mostrar checkout: {}", e.getMessage());
             SessionUtil.setFlashMessage(request, "error", "Error al cargar el checkout");
             response.sendRedirect(request.getContextPath() + "/carrito");
@@ -217,7 +217,7 @@ public class PedidoServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             logger.warn("ID de pedido inválido: {}", idPedidoParam);
             response.sendRedirect(request.getContextPath() + "/pedidos");
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al mostrar confirmación: {}", e.getMessage());
             request.setAttribute("error", "Pedido no encontrado");
             request.getRequestDispatcher("/views/error.jsp").forward(request, response);
@@ -244,7 +244,7 @@ public class PedidoServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/usuario/pedidos.jsp").forward(request, response);
 
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al listar pedidos: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los pedidos");
             request.getRequestDispatcher("/views/usuario/pedidos.jsp").forward(request, response);
@@ -293,7 +293,7 @@ public class PedidoServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             logger.warn("ID de pedido inválido: {}", idPedidoParam);
             response.sendRedirect(request.getContextPath() + "/pedidos");
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al ver detalle del pedido: {}", e.getMessage());
             request.setAttribute("error", "Pedido no encontrado");
             request.getRequestDispatcher("/views/error.jsp").forward(request, response);
@@ -359,7 +359,7 @@ public class PedidoServlet extends HttpServlet {
             // Redirigir a confirmación
             response.sendRedirect(request.getContextPath() + "/pedido/confirmacion?id=" + idPedido);
 
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al crear pedido: {}", e.getMessage());
             request.setAttribute("error", e.getMessage());
             mostrarCheckout(request, response);
@@ -407,7 +407,7 @@ public class PedidoServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             logger.warn("ID de pedido inválido: {}", idPedidoParam);
             response.sendRedirect(request.getContextPath() + "/pedidos");
-        } catch (com.google.protobuf.ServiceException e) {
+        } catch (ServiceException e) {
             logger.error("Error al cancelar pedido: {}", e.getMessage());
             SessionUtil.setFlashMessage(request, "error", e.getMessage());
             response.sendRedirect(request.getContextPath() + "/pedidos");
