@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.service.CarritoService;
 import com.techzone.ecommerce.techzone.service.CarritoService.CarritoCompleto;
 import com.techzone.ecommerce.techzone.util.SessionUtil;
