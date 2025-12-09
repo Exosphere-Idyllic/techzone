@@ -2,6 +2,8 @@ package com.techzone.ecommerce.techzone.dao;
 
 import com.techzone.ecommerce.techzone.config.DatabaseConnection;
 import com.techzone.ecommerce.techzone.model.Producto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.*;
@@ -14,13 +16,16 @@ import java.util.Optional;
  * Proporciona operaciones CRUD completas y métodos de consulta para productos
  *
  * @author TechZone Team
+ * @version 2.0 - Compatible con Producto v2.0 con campos transient
  */
 public class ProductoDAO {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductoDAO.class);
     private final DatabaseConnection dbConnection;
 
     public ProductoDAO() {
         this.dbConnection = DatabaseConnection.getInstance();
+        logger.debug("ProductoDAO inicializado");
     }
 
     // ==================== CREATE ====================
@@ -62,6 +67,7 @@ public class ProductoDAO {
                 if (generatedKeys.next()) {
                     int id = generatedKeys.getInt(1);
                     producto.setIdProducto(id);
+                    logger.info("Producto creado con ID: {}", id);
                     return id;
                 }
             }
@@ -116,6 +122,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos en total", productos.size());
         return productos;
     }
 
@@ -142,6 +149,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos de categoría {}", productos.size(), idCategoria);
         return productos;
     }
 
@@ -164,6 +172,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos disponibles", productos.size());
         return productos;
     }
 
@@ -190,6 +199,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Búsqueda '{}': {} productos encontrados", nombre, productos.size());
         return productos;
     }
 
@@ -213,6 +223,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos con descuento", productos.size());
         return productos;
     }
 
@@ -240,6 +251,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos más recientes", productos.size());
         return productos;
     }
 
@@ -270,6 +282,7 @@ public class ProductoDAO {
             }
         }
 
+        logger.debug("Obtenidos {} productos con stock <= {}", productos.size(), stockMinimo);
         return productos;
     }
 
@@ -302,7 +315,13 @@ public class ProductoDAO {
             pstmt.setBigDecimal(10, producto.getDescuento());
             pstmt.setInt(11, producto.getIdProducto());
 
-            return pstmt.executeUpdate() > 0;
+            boolean actualizado = pstmt.executeUpdate() > 0;
+            
+            if (actualizado) {
+                logger.info("Producto {} actualizado exitosamente", producto.getIdProducto());
+            }
+            
+            return actualizado;
         }
     }
 
@@ -323,7 +342,13 @@ public class ProductoDAO {
             pstmt.setInt(1, nuevoStock);
             pstmt.setInt(2, idProducto);
 
-            return pstmt.executeUpdate() > 0;
+            boolean actualizado = pstmt.executeUpdate() > 0;
+            
+            if (actualizado) {
+                logger.debug("Stock del producto {} actualizado a {}", idProducto, nuevoStock);
+            }
+            
+            return actualizado;
         }
     }
 
@@ -346,7 +371,15 @@ public class ProductoDAO {
             pstmt.setInt(2, idProducto);
             pstmt.setInt(3, cantidad);
 
-            return pstmt.executeUpdate() > 0;
+            boolean reducido = pstmt.executeUpdate() > 0;
+            
+            if (reducido) {
+                logger.debug("Stock del producto {} reducido en {} unidades", idProducto, cantidad);
+            } else {
+                logger.warn("No se pudo reducir stock del producto {} - stock insuficiente", idProducto);
+            }
+            
+            return reducido;
         }
     }
 
@@ -367,7 +400,13 @@ public class ProductoDAO {
             pstmt.setString(1, estado.name());
             pstmt.setInt(2, idProducto);
 
-            return pstmt.executeUpdate() > 0;
+            boolean actualizado = pstmt.executeUpdate() > 0;
+            
+            if (actualizado) {
+                logger.info("Estado del producto {} actualizado a {}", idProducto, estado);
+            }
+            
+            return actualizado;
         }
     }
 
@@ -388,7 +427,13 @@ public class ProductoDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, idProducto);
-            return pstmt.executeUpdate() > 0;
+            boolean eliminado = pstmt.executeUpdate() > 0;
+            
+            if (eliminado) {
+                logger.info("Producto {} eliminado exitosamente", idProducto);
+            }
+            
+            return eliminado;
         }
     }
 
