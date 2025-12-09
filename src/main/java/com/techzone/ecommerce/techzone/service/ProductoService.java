@@ -53,11 +53,7 @@ public class ProductoService {
 
             List<Producto> productos = productoDAO.obtenerMasRecientes(limite);
 
-            // Cargar información de categoría para cada producto
-            for (Producto producto : productos) {
-                Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
-                producto.setCategoria(categoria.orElse(null));
-            }
+            // NO cargar categorías aquí - ya las tiene el HomeServlet
 
             logger.debug("Se obtuvieron {} productos recientes", productos.size());
             return productos;
@@ -84,14 +80,9 @@ public class ProductoService {
                 throw new ServiceException("El límite debe ser mayor a 0");
             }
 
-            // Obtener todos los productos con descuento
             List<Producto> productos = productoDAO.obtenerConDescuento();
 
-            // Cargar información de categoría para cada producto
-            for (Producto producto : productos) {
-                Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
-                producto.setCategoria(categoria.orElse(null));
-            }
+            // NO cargar categorías aquí
 
             // Limitar la cantidad de productos retornados
             if (productos.size() > limite) {

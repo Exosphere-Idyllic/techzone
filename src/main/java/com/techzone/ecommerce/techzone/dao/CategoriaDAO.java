@@ -115,12 +115,11 @@ public class CategoriaDAO {
 
         return categorias;
     }
-
     /**
      * Obtiene las categorías activas
      */
     public List<Categoria> obtenerActivas() throws SQLException {
-        String sql = "SELECT * FROM categorias WHERE estado = 'ACTIVA' ORDER BY nombre";
+        String sql = "SELECT * FROM categorias WHERE estado = 'ACTIVO' ORDER BY nombre";
         List<Categoria> categorias = new ArrayList<>();
 
         try (Connection conn = dbConnection.getConnection();

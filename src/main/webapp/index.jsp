@@ -330,10 +330,12 @@
                 <c:forEach items="${productosDestacados}" var="producto">
                     <div class="product-card" onclick="location.href='${pageContext.request.contextPath}/producto/detalle?id=${producto.idProducto}'">
                         <div class="product-image">
+                            <c:set var="imagenes" value="${imagenesMap[producto.idProducto]}" />
                             <c:choose>
-                                <c:when test="${not empty producto.imagenPrincipal}">
-                                    <img src="${pageContext.request.contextPath}/uploads/${producto.imagenPrincipal}"
-                                         alt="${producto.nombre}">
+                                <c:when test="${not empty imagenes && not empty imagenes[0]}">
+                                    <img src="${pageContext.request.contextPath}${imagenes[0].urlImagen}"
+                                         alt="${producto.nombre}"
+                                         onerror="this.style.display='none'; this.parentElement.querySelector('svg').style.display='flex';">
                                 </c:when>
                                 <c:otherwise>
                                     <svg width="80" height="80" viewBox="0 0 24 24" fill="#333">
@@ -345,27 +347,17 @@
                         <div class="product-info">
                             <h3 class="product-name">${producto.nombre}</h3>
                             <div class="product-price">$${producto.precio}</div>
-                            <button class="product-btn">Ver Detalles</button>
+                            <button class="product-btn" onclick="event.stopPropagation(); alert('Producto agregado al carrito');">
+                                Ver Detalles
+                            </button>
                         </div>
                     </div>
                 </c:forEach>
             </c:when>
             <c:otherwise>
-                <!-- Productos de ejemplo si no hay datos -->
-                <c:forEach begin="1" end="4">
-                    <div class="product-card">
-                        <div class="product-image">
-                            <svg width="80" height="80" viewBox="0 0 24 24" fill="#333">
-                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                            </svg>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-name">Producto Ejemplo</h3>
-                            <div class="product-price">$999.99</div>
-                            <button class="product-btn">Ver Detalles</button>
-                        </div>
-                    </div>
-                </c:forEach>
+                <p style="color: #b0b0b0; text-align: center; grid-column: 1/-1;">
+                    No hay productos disponibles en este momento
+                </p>
             </c:otherwise>
         </c:choose>
     </div>
