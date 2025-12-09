@@ -86,7 +86,7 @@ public class HomeServlet extends HttpServlet {
             // 6. Forward a la vista
             request.getRequestDispatcher("/index.jsp").forward(request, response);
 
-        } catch (com.google.protobuf.ServiceException | ProductoService.ServiceException e) {
+        } catch (ServiceException | ProductoService.ServiceException e) {
             logger.error("Error al cargar página principal: {}", e.getMessage(), e);
             request.setAttribute("error", "Error al cargar la página principal");
             request.getRequestDispatcher("/views/error.jsp").forward(request, response);
