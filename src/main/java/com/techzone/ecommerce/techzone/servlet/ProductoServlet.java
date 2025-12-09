@@ -128,12 +128,12 @@ public class ProductoServlet extends HttpServlet {
             logger.debug("Listando {} productos, página {}/{}", 
                     resultado.getProductos().size(), pagina, resultado.getTotalPaginas());
 
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al listar productos: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los productos");
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
         }
     }
 
@@ -234,13 +234,13 @@ public class ProductoServlet extends HttpServlet {
 
             logger.debug("Búsqueda '{}': {} resultados", termino, resultado.getTotalProductos());
 
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error en búsqueda '{}': {}", termino, e.getMessage());
             request.setAttribute("error", "Error al realizar la búsqueda");
             request.setAttribute("terminoBusqueda", termino);
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
         }
     }
 
@@ -298,7 +298,7 @@ public class ProductoServlet extends HttpServlet {
 
             logger.debug("Categoría '{}': {} productos", categoria.getNombre(), resultado.getTotalProductos());
 
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             logger.warn("ID de categoría inválido: {}", idParam);
@@ -309,7 +309,7 @@ public class ProductoServlet extends HttpServlet {
         } catch (ServiceException e) {
             logger.error("Error al listar por categoría: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los productos");
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
         }
     }
 
@@ -348,12 +348,12 @@ public class ProductoServlet extends HttpServlet {
 
             logger.debug("Ofertas: {} productos con descuento", resultado.getTotalProductos());
 
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al listar ofertas: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar las ofertas");
-            request.getRequestDispatcher("/views/productos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
         }
     }
 

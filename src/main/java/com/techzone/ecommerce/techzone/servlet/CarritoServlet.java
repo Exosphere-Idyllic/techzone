@@ -151,12 +151,12 @@ public class CarritoServlet extends HttpServlet {
             logger.debug("Carrito usuario {}: {} items, total ${}", 
                     idUsuario, carrito.getCantidadTotal(), carrito.getTotal());
 
-            request.getRequestDispatcher("/views/carrito.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/carrito/ver-carrito.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al obtener carrito: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar el carrito");
-            request.getRequestDispatcher("/views/carrito.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/carrito/ver-carrito.jsp").forward(request, response);
         }
     }
 

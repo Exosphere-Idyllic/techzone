@@ -167,7 +167,7 @@ public class PedidoServlet extends HttpServlet {
             logger.debug("Mostrando checkout para usuario {}: {} items, total ${}",
                     idUsuario, carrito.getCantidadTotal(), carrito.getTotal());
 
-            request.getRequestDispatcher("/views/checkout.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/carrito/checkout.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al mostrar checkout: {}", e.getMessage());
@@ -212,7 +212,7 @@ public class PedidoServlet extends HttpServlet {
 
             logger.debug("Mostrando confirmación del pedido {}", idPedido);
 
-            request.getRequestDispatcher("/views/pedido-confirmacion.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/carrito/confirmacion.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             logger.warn("ID de pedido inválido: {}", idPedidoParam);
@@ -242,12 +242,12 @@ public class PedidoServlet extends HttpServlet {
 
             logger.debug("Listando {} pedidos del usuario {}", pedidos.size(), idUsuario);
 
-            request.getRequestDispatcher("/views/mis-pedidos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/pedidos.jsp").forward(request, response);
 
         } catch (ServiceException e) {
             logger.error("Error al listar pedidos: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los pedidos");
-            request.getRequestDispatcher("/views/mis-pedidos.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/pedidos.jsp").forward(request, response);
         }
     }
 
@@ -288,7 +288,7 @@ public class PedidoServlet extends HttpServlet {
 
             logger.debug("Mostrando detalle del pedido {}", idPedido);
 
-            request.getRequestDispatcher("/views/pedido-detalle.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/usuario/detalle-pedido.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             logger.warn("ID de pedido inválido: {}", idPedidoParam);
