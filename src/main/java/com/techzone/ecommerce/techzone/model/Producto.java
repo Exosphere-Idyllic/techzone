@@ -3,6 +3,7 @@ package com.techzone.ecommerce.techzone.model;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 public class Producto implements Serializable {
@@ -21,6 +22,9 @@ public class Producto implements Serializable {
     private EstadoProducto estado;
     private LocalDateTime fechaRegistro;
     private BigDecimal descuento;
+    private transient String imagenPrincipal;
+
+    private transient List<Imagen> imagenes;
 
     // Campo adicional para joins (no se guarda en DB)
     private transient Categoria categoria;
@@ -148,6 +152,27 @@ public class Producto implements Serializable {
         this.categoria = categoria;
     }
 
+    public String getImagenPrincipal() {
+
+        return imagenPrincipal;
+    }
+
+    public void setImagenPrincipal(String imagenPrincipal) {
+        this.imagenPrincipal = imagenPrincipal;
+    }
+
+    public List<Imagen> getImagenes() {
+        return imagenes;
+    }
+
+    public void setImagenes(List<Imagen> imagenes) {
+        this.imagenes = imagenes;
+        // Auto-establecer la imagen principal si no está definida
+        if (this.imagenPrincipal == null && imagenes != null && !imagenes.isEmpty()) {
+            establecerImagenPrincipalDesdeImagenes();
+        }
+    }
+
     // Métodos auxiliares
     public BigDecimal getPrecioConDescuento() {
         if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
@@ -157,6 +182,7 @@ public class Producto implements Serializable {
         }
         return precio;
     }
+
 
     public boolean tieneStock() {
         return stock != null && stock > 0;
@@ -188,5 +214,46 @@ public class Producto implements Serializable {
                 ", stock=" + stock +
                 ", estado=" + estado +
                 '}';
+    }
+    public void establecerImagenPrincipalDesdeImagenes() {
+        if (imagenes == null || imagenes.isEmpty()) {
+            this.imagenPrincipal = null;
+            return;
+        }
+
+        // Buscar imagen marcada como principal
+        this.imagenPrincipal = imagenes.stream()
+                .filter(img -> img.getEsPrincipal() != null && img.getEsPrincipal())  // ✅ CORRECTO
+                .findFirst()
+                .map(Imagen::getUrlImagen)
+                .orElse(imagenes.get(0).getUrlImagen());
+    }
+
+    /**
+     * Verifica si el producto tiene imágenes
+     */
+    public boolean tieneImagenes() {
+        return imagenes != null && !imagenes.isEmpty();
+    }
+
+    /**
+     * Obtiene la cantidad de imágenes del producto
+     */
+    public int getCantidadImagenes() {
+        return imagenes != null ? imagenes.size() : 0;
+    }
+
+    /**
+     * Obtiene la imagen principal como objeto Imagen (no solo la URL)
+     */
+    public Imagen getImagenPrincipalObjeto() {
+        if (imagenes == null || imagenes.isEmpty()) {
+            return null;
+        }
+
+        return imagenes.stream()
+                .filter(img -> img.getEsPrincipal() != null && img.getEsPrincipal())
+                .findFirst()
+                .orElse(imagenes.get(0));
     }
 }

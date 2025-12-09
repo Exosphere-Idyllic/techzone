@@ -267,4 +267,42 @@ public class CategoriaDAO {
 
         return categoria;
     }
+
+    public List<Categoria> obtenerActivasConConteo() throws SQLException {
+        String sql = """
+        SELECT c.id_categoria, c.nombre, c.descripcion, c.estado,
+               COUNT(p.id_producto) as cantidad_productos
+        FROM categorias c
+        LEFT JOIN productos p ON c.id_categoria = p.id_categoria 
+                                AND p.estado = 'DISPONIBLE'
+        WHERE c.estado = 'ACTIVO'
+        GROUP BY c.id_categoria, c.nombre, c.descripcion, c.estado
+        ORDER BY c.nombre
+        """;
+
+        List<Categoria> categorias = new ArrayList<>();
+
+        try (Connection conn = dbConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Categoria categoria = new Categoria();
+                categoria.setIdCategoria(rs.getInt("id_categoria"));
+                categoria.setNombre(rs.getString("nombre"));
+                categoria.setDescripcion(rs.getString("descripcion"));
+                categoria.setEstado(
+                        Categoria.EstadoCategoria.valueOf(
+                                rs.getString("estado").trim().toUpperCase()
+                        )
+                );
+                //  Asignar el conteo de productos
+                categoria.setCantidadProductos(rs.getInt("cantidad_productos"));
+
+                categorias.add(categoria);
+            }
+        }
+
+        return categorias;
+    }
 }

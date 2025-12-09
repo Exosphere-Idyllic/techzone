@@ -326,6 +326,25 @@ public class CategoriaService {
         }
     }
 
+
+    /**
+     * ✅ MÉTODO OPCIONAL: Para usar en CategoriaService.java
+     * Obtiene categorías activas con el conteo de productos
+     */
+    public List<Categoria> obtenerCategoriasActivasConConteo() throws ServiceException {
+        logger.debug("Obteniendo categorías activas con conteo de productos");
+
+        try {
+            List<Categoria> categorias = categoriaDAO.obtenerActivasConConteo();
+            logger.debug("Se encontraron {} categorías activas con conteo", categorias.size());
+            return categorias;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener categorías activas con conteo: {}", e.getMessage(), e);
+            throw new ServiceException("Error al obtener las categorías activas: " + e.getMessage());
+        }
+    }
+
     // ==================== VALIDACIONES ====================
 
     /**

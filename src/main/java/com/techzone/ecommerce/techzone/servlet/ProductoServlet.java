@@ -2,7 +2,9 @@ package com.techzone.ecommerce.techzone.servlet;
 
 import com.google.protobuf.ServiceException;
 import com.techzone.ecommerce.techzone.model.Categoria;
+import com.techzone.ecommerce.techzone.model.Imagen;
 import com.techzone.ecommerce.techzone.model.Producto;
+import com.techzone.ecommerce.techzone.service.ImagenService;
 import com.techzone.ecommerce.techzone.service.ProductoService;
 import com.techzone.ecommerce.techzone.service.ProductoService.FiltroProductos;
 import com.techzone.ecommerce.techzone.service.ProductoService.OrdenProducto;
@@ -20,7 +22,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Servlet para gestión pública de productos: listar, detalle, buscar, filtrar
@@ -104,7 +108,7 @@ public class ProductoServlet extends HttpServlet {
             String orden = request.getParameter("orden");
 
             // Configurar filtros
-            FiltroProductos filtros = new FiltroProductos();
+            ProductoService.FiltroProductos filtros = new ProductoService.FiltroProductos();
             filtros.setPagina(pagina);
             filtros.setProductosPorPagina(PRODUCTOS_POR_PAGINA);
             filtros.setSoloDisponibles(true);
@@ -115,22 +119,59 @@ public class ProductoServlet extends HttpServlet {
             }
 
             // Buscar productos
-            ResultadoBusqueda resultado = productoService.buscarProductos(filtros);
+            ProductoService.ResultadoBusqueda resultado = productoService.buscarProductos(filtros);
+
+            // ✅ OPTIMIZACIÓN CRÍTICA: Cargar TODAS las imágenes en UN SOLO query
+            List<Producto> productos = resultado.getProductos();
+            if (!productos.isEmpty()) {
+                // Extraer IDs de todos los productos
+                List<Integer> idsProductos = productos.stream()
+                        .map(Producto::getIdProducto)
+                        .toList();
+
+                // ✅ UNA SOLA consulta para obtener TODAS las imágenes
+                ImagenService imagenService = new ImagenService();
+                Map<Integer, List<Imagen>> mapaImagenes = imagenService.obtenerImagenesPorProductos(idsProductos);
+
+                // Asignar imágenes a cada producto
+                for (Producto producto : productos) {
+                    List<Imagen> imagenesProducto = mapaImagenes.getOrDefault(
+                            producto.getIdProducto(),
+                            new ArrayList<>()
+                    );
+
+                    producto.setImagenes(imagenesProducto);
+
+                    // Establecer imagen principal
+                    if (!imagenesProducto.isEmpty()) {
+                        // Buscar la imagen marcada como principal
+                        String imgPrincipal = imagenesProducto.stream()
+                                .filter(img -> img.getEsPrincipal() != null && img.getEsPrincipal())
+                                .findFirst()
+                                .map(Imagen::getUrlImagen)
+                                .orElse(imagenesProducto.get(0).getUrlImagen());
+
+                        producto.setImagenPrincipal(imgPrincipal);
+                    }
+                }
+
+                logger.debug("Cargadas imágenes para {} productos en una sola operación", productos.size());
+            }
 
             // Enviar datos a la vista
-            request.setAttribute("productos", resultado.getProductos());
+            request.setAttribute("productos", productos);
             request.setAttribute("paginaActual", resultado.getPaginaActual());
             request.setAttribute("totalPaginas", resultado.getTotalPaginas());
             request.setAttribute("totalProductos", resultado.getTotalProductos());
             request.setAttribute("ordenActual", orden);
             request.setAttribute("titulo", "Todos los Productos");
 
-            logger.debug("Listando {} productos, página {}/{}", 
-                    resultado.getProductos().size(), pagina, resultado.getTotalPaginas());
+            logger.debug("Listando {} productos, página {}/{}",
+                    productos.size(), pagina, resultado.getTotalPaginas());
 
             request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
-        } catch (ServiceException e) {
+        } catch (Exception e) {
             logger.error("Error al listar productos: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los productos");
             request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
@@ -364,11 +405,15 @@ public class ProductoServlet extends HttpServlet {
      */
     private void cargarCategorias(HttpServletRequest request) {
         try {
-            List<Categoria> categorias = categoriaDAO.obtenerActivas();
+            // ✅ Usar el nuevo método que trae el conteo en UN SOLO query
+            List<Categoria> categorias = categoriaDAO.obtenerActivasConConteo();
             request.setAttribute("categorias", categorias);
+
+            logger.debug("Cargadas {} categorías con conteo de productos", categorias.size());
         } catch (SQLException e) {
             logger.error("Error al cargar categorías: {}", e.getMessage());
             // No es crítico, continuar sin categorías
+            request.setAttribute("categorias", new ArrayList<>());
         }
     }
 

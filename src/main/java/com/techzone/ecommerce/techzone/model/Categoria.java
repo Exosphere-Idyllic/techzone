@@ -11,6 +11,7 @@ public class Categoria implements Serializable {
     private String nombre;
     private String descripcion;
     private EstadoCategoria estado;
+    private Integer cantidadProductos;
 
     public enum EstadoCategoria {
         ACTIVO, INACTIVO
@@ -57,6 +58,14 @@ public class Categoria implements Serializable {
 
     public void setEstado(EstadoCategoria estado) {
         this.estado = estado;
+    }
+
+    public Integer getCantidadProductos() {
+        return cantidadProductos;
+    }
+
+    public void setCantidadProductos(Integer cantidadProductos) {
+        this.cantidadProductos = cantidadProductos;
     }
 
     @Override

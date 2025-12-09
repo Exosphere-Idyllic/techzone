@@ -612,6 +612,8 @@ public class ProductoService {
         }
     }
 
+
+
     // ==================== CLASES INTERNAS ====================
 
     public static class ProductoCompleto {
