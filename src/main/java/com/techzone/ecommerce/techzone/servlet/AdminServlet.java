@@ -133,7 +133,7 @@ public class AdminServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/admin/dashboard.jsp").forward(request, response);
 
-        } catch (ServiceException e) {
+        } catch (ServiceException | ProductoService.ServiceException e) {
             logger.error("Error al cargar dashboard: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar el dashboard");
             request.getRequestDispatcher("/views/admin/dashboard.jsp").forward(request, response);
@@ -170,7 +170,7 @@ public class AdminServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/admin/productos.jsp").forward(request, response);
 
-        } catch (ServiceException e) {
+        } catch (ProductoService.ServiceException e) {
             logger.error("Error al listar productos admin: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los productos");
             request.getRequestDispatcher("/views/admin/productos.jsp").forward(request, response);
@@ -265,7 +265,7 @@ public class AdminServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/admin/estadisticas.jsp").forward(request, response);
 
-        } catch (ServiceException e) {
+        } catch (ServiceException | ProductoService.ServiceException e) {
             logger.error("Error al cargar estadísticas: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar las estadísticas");
             request.getRequestDispatcher("/views/admin/estadisticas.jsp").forward(request, response);

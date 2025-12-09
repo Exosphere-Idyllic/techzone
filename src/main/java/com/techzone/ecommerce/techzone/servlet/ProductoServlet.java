@@ -194,7 +194,7 @@ public class ProductoServlet extends HttpServlet {
 
             logger.debug("Mostrando detalle del producto ID: {}", idProducto);
 
-            request.getRequestDispatcher("/views/producto-detalle.jsp").forward(request, response);
+            request.getRequestDispatcher("/views/productos/producto-detalle.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             logger.warn("ID de producto inválido: {}", idParam);

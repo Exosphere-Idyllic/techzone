@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.model.Categoria;
 import com.techzone.ecommerce.techzone.model.Imagen;
 import com.techzone.ecommerce.techzone.model.Producto;
@@ -86,7 +86,7 @@ public class HomeServlet extends HttpServlet {
             // 6. Forward a la vista
             request.getRequestDispatcher("/index.jsp").forward(request, response);
 
-        } catch (ServiceException e) {
+        } catch (com.google.protobuf.ServiceException | ProductoService.ServiceException e) {
             logger.error("Error al cargar página principal: {}", e.getMessage(), e);
             request.setAttribute("error", "Error al cargar la página principal");
             request.getRequestDispatcher("/views/error.jsp").forward(request, response);
