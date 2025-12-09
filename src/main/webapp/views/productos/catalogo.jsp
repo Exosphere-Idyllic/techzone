@@ -767,4 +767,176 @@
                                 <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
                             </svg>
                         </button>
-                        <button c
+                        <div class="toolbar-actions">
+                            <!-- View Toggle -->
+                            <div class="view-toggle">
+                                <button class="view-btn active"
+                                        onclick="setView('grid')"
+                                        id="gridViewBtn"
+                                        title="Vista en cuadrícula">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
+                                    </svg>
+                                </button>
+                                <button class="view-btn"
+                                        onclick="setView('list')"
+                                        id="listViewBtn"
+                                        title="Vista en lista">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Sort -->
+                            <select class="sort-select" name="orden" onchange="this.form.submit()">
+                                <option value="recientes" ${param.orden == 'recientes' ? 'selected' : ''}>
+                                    Más recientes
+                                </option>
+                                <option value="precio-asc" ${param.orden == 'precio-asc' ? 'selected' : ''}>
+                                    Precio: menor a mayor
+                                </option>
+                                <option value="precio-desc" ${param.orden == 'precio-desc' ? 'selected' : ''}>
+                                    Precio: mayor a menor
+                                </option>
+                                <option value="nombre" ${param.orden == 'nombre' ? 'selected' : ''}>
+                                    Nombre A-Z
+                                </option>
+                                <option value="populares" ${param.orden == 'populares' ? 'selected' : ''}>
+                                    Más populares
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <c:choose>
+                    <c:when test="${empty productos or productos.size() == 0}">
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h2 class="empty-title">No se encontraron productos</h2>
+                        <p class="empty-text">
+                            <c:choose>
+                                <c:when test="${not empty param.buscar or not empty param.categoria or not empty param.precioMin or not empty param.precioMax}">
+                                    Intenta ajustar tus filtros de búsqueda
+                                </c:when>
+                                <c:otherwise>
+                                    No hay productos disponibles en este momento
+                                </c:otherwise>
+                            </c:choose>
+                        </p>
+                        <c:if test="${not empty param.buscar or not empty param.categoria or not empty param.precioMin or not empty param.precioMax}">
+                            <button class="btn-clear-all" onclick="clearAllFilters()">
+                                <i class="fas fa-redo"></i> Limpiar filtros
+                            </button>
+                        </c:if>
+                    </div>
+                    </c:when>
+                    <c:otherwise>
+                    <div class="products-grid" id="productsGrid">
+                        <c:forEach items="${productos}" var="producto">
+                            <%@ include file="/views/components/producto-card.jsp" %>
+                        </c:forEach>
+                    </div>
+
+                    <!-- Pagination -->
+                    <c:if test="${totalPaginas > 1}">
+                    <div class="pagination">
+                        <c:if test="${paginaActual > 1}">
+                            <a href="?pagina=${paginaActual - 1}${parametrosUrl}" class="page-btn">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </c:if>
+
+                        <c:forEach begin="1" end="${totalPaginas}" var="i">
+                            <c:choose>
+                                <c:when test="${i == paginaActual}">
+                                    <span class="page-btn active">${i}</span>
+                                </c:when>
+                                <c:when test="${i <= 3 or i >= totalPaginas - 2 or (i >= paginaActual - 1 and i <= paginaActual + 1)}">
+                                    <a href="?pagina=${i}${parametrosUrl}" class="page-btn">${i}</a>
+                                </c:when>
+                                <c:when test="${i == 4 or i == totalPaginas - 3}">
+                                    <span class="page-btn" style="pointer-events: none;">...</span>
+                                </c:when>
+                            </c:choose>
+                        </c:forEach>
+
+                        <c:if test="${paginaActual < totalPaginas}">
+                            <a href="?pagina=${paginaActual + 1}${parametrosUrl}" class="page-btn">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </c:if>
+                    </div>
+                    </c:if>
+                    </c:otherwise>
+                    </c:choose>
+        </main>
+    </div>
+</div>
+
+<!-- Include Footer -->
+<%@ include file="/views/components/footer.jsp" %>
+
+<script>
+    // Mobile filters toggle
+    function toggleMobileFilters() {
+        const sidebar = document.getElementById('filtersSidebar');
+        sidebar.classList.toggle('mobile-open');
+    }
+
+    // Clear all filters
+    function clearAllFilters() {
+        window.location.href = '${pageContext.request.contextPath}/productos';
+    }
+
+    // View toggle
+    function setView(viewType) {
+        const grid = document.getElementById('productsGrid');
+        const gridBtn = document.getElementById('gridViewBtn');
+        const listBtn = document.getElementById('listViewBtn');
+
+        if (viewType === 'grid') {
+            grid.classList.remove('list-view');
+            gridBtn.classList.add('active');
+            listBtn.classList.remove('active');
+            localStorage.setItem('catalogView', 'grid');
+        } else {
+            grid.classList.add('list-view');
+            listBtn.classList.add('active');
+            gridBtn.classList.remove('active');
+            localStorage.setItem('catalogView', 'list');
+        }
+    }
+
+    // Restore view preference
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedView = localStorage.getItem('catalogView');
+        if (savedView === 'list') {
+            setView('list');
+        }
+
+        // Auto-submit form on filter change
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // Optional: auto-submit on checkbox change
+                // document.getElementById('filtersForm').submit();
+            });
+        });
+    });
+
+    // Show loading overlay on form submit
+    document.getElementById('filtersForm').addEventListener('submit', function() {
+        document.getElementById('loadingOverlay').classList.add('active');
+    });
+
+    // Hide loading on page load
+    window.addEventListener('load', function() {
+        document.getElementById('loadingOverlay').classList.remove('active');
+    });
+</script>
+</body>
+</html>

@@ -129,7 +129,7 @@ public class ProductoService {
                 throw new ServiceException("La categoría seleccionada no existe");
             }
 
-            if (categoria.get().getEstado() != Categoria.EstadoCategoria.ACTIVA) {
+            if (categoria.get().getEstado() != Categoria.EstadoCategoria.ACTIVO) {
                 throw new ServiceException("La categoría seleccionada no está activa");
             }
 

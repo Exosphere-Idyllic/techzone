@@ -2,13 +2,10 @@ package com.techzone.ecommerce.techzone.service;
 
 import com.google.protobuf.ServiceException;
 import com.techzone.ecommerce.techzone.dao.CategoriaDAO;
-import com.techzone.ecommerce.techzone.model.Carrito;
 import com.techzone.ecommerce.techzone.model.Categoria;
-import com.techzone.ecommerce.techzone.model.Producto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -356,72 +353,7 @@ public class CategoriaService {
         }
 
         if (categoria.getEstado() == null) {
-            categoria.setEstado(Categoria.EstadoCategoria.ACTIVA);
-        }
-    }
-
-
-    public static class CarritoCompleto {
-        private final List<ItemCarrito> items;
-        private final BigDecimal subtotal;
-        private final BigDecimal totalDescuentos;
-        private final BigDecimal total;
-        private final int cantidadTotal;
-        private final List<String> problemas;
-
-        public CarritoCompleto(List<ItemCarrito> items, BigDecimal subtotal,
-                               BigDecimal totalDescuentos, BigDecimal total,
-                               int cantidadTotal, List<String> problemas) {
-            this.items = items;
-            this.subtotal = subtotal;
-            this.totalDescuentos = totalDescuentos;
-            this.total = total;
-            this.cantidadTotal = cantidadTotal;
-            this.problemas = problemas;
-        }
-
-        // ✅ MÉTODO AGREGADO para compatibilidad con JSP
-        public int size() {
-            return items != null ? items.size() : 0;
-        }
-
-        public List<ItemCarrito> getItems() { return items; }
-        public BigDecimal getSubtotal() { return subtotal; }
-        public BigDecimal getTotalDescuentos() { return totalDescuentos; }
-        public BigDecimal getTotal() { return total; }
-        public int getCantidadTotal() { return cantidadTotal; }
-        public List<String> getProblemas() { return problemas; }
-        public boolean tieneProblemas() { return !problemas.isEmpty(); }
-        public boolean estaVacio() { return items.isEmpty(); }
-    }
-
-    public static class ItemCarrito {
-        private final Carrito carrito;
-        private final Producto producto;
-        private final BigDecimal precioUnitario;
-        private final BigDecimal precioConDescuento;
-        private final BigDecimal subtotal;
-        private final BigDecimal descuento;
-
-        public ItemCarrito(Carrito carrito, Producto producto,
-                           BigDecimal precioUnitario, BigDecimal precioConDescuento,
-                           BigDecimal subtotal, BigDecimal descuento) {
-            this.carrito = carrito;
-            this.producto = producto;
-            this.precioUnitario = precioUnitario;
-            this.precioConDescuento = precioConDescuento;
-            this.subtotal = subtotal;
-            this.descuento = descuento;
-        }
-
-        public Carrito getCarrito() { return carrito; }
-        public Producto getProducto() { return producto; }
-        public BigDecimal getPrecioUnitario() { return precioUnitario; }
-        public BigDecimal getPrecioConDescuento() { return precioConDescuento; }
-        public BigDecimal getSubtotal() { return subtotal; }
-        public BigDecimal getDescuento() { return descuento; }
-        public boolean tieneDescuento() {
-            return descuento.compareTo(BigDecimal.ZERO) > 0;
+            categoria.setEstado(Categoria.EstadoCategoria.ACTIVO);
         }
     }
 }

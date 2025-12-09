@@ -13,11 +13,11 @@ public class Categoria implements Serializable {
     private EstadoCategoria estado;
 
     public enum EstadoCategoria {
-        ACTIVA, INACTIVA
+        ACTIVO, INACTIVO
     }
 
     public Categoria() {
-        this.estado = EstadoCategoria.ACTIVA;
+        this.estado = EstadoCategoria.ACTIVO;
     }
 
     public Categoria(String nombre, String descripcion) {

@@ -58,22 +58,26 @@ public class CategoriaDAO {
     /**
      * Busca una categoría por su ID
      */
-    public Optional<Categoria> buscarPorId(int id) throws SQLException {
-        String sql = "SELECT * FROM categorias WHERE id_categoria = ?";
+    public Categoria buscarPorId(int id) {
+
+        String sql = "SELECT * FROM categoria WHERE id_categoria = ?";
 
         try (Connection conn = dbConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, id);
+            ps.setInt(1, id);
 
-            try (ResultSet rs = pstmt.executeQuery()) {
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(mapearCategoria(rs));
+                    return mapearCategoria(rs);
                 }
             }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar categoría por ID", e);
         }
 
-        return Optional.empty();
+        return null;
     }
 
     /**
@@ -260,7 +264,11 @@ public class CategoriaDAO {
         categoria.setIdCategoria(rs.getInt("id_categoria"));
         categoria.setNombre(rs.getString("nombre"));
         categoria.setDescripcion(rs.getString("descripcion"));
-        categoria.setEstado(Categoria.EstadoCategoria.valueOf(rs.getString("estado")));
+        categoria.setEstado(
+                Categoria.EstadoCategoria.valueOf(
+                        rs.getString("estado").trim().toUpperCase()
+                )
+        );
 
         return categoria;
     }
