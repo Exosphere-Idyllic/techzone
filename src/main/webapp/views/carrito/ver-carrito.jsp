@@ -444,7 +444,7 @@
             <div class="cart-layout">
                 <!-- Cart Items -->
                 <div class="cart-items">
-                    <c:forEach var="item" items="${carrito}">
+                    <c:forEach var="item" items="${carrito.items}">
                         <div class="cart-item">
                             <div class="item-image">
                                 <c:choose>

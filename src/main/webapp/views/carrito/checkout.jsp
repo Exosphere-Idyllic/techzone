@@ -670,7 +670,7 @@
                 <h2 class="summary-title">Resumen del Pedido</h2>
 
                 <div class="summary-items">
-                    <c:forEach var="item" items="${carrito}">
+                    <c:forEach var="item" items="${carrito.items}">
                         <div class="summary-item">
                             <div class="summary-item-image">
                                 <c:choose>
