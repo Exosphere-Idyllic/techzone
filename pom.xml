@@ -291,12 +291,13 @@
             </plugin>
 
             <!-- JAX-WS Plugin (para generar clases de SOAP) - Versión actualizada -->
+            <!-- COMENTADO: Descomentar cuando se cree el servicio SOAP -->
+            <!--
             <plugin>
                 <groupId>com.sun.xml.ws</groupId>
                 <artifactId>jaxws-maven-plugin</artifactId>
                 <version>3.0.2</version>
                 <dependencies>
-                    <!-- Dependencias necesarias para Jakarta EE -->
                     <dependency>
                         <groupId>jakarta.servlet</groupId>
                         <artifactId>jakarta.servlet-api</artifactId>
@@ -325,7 +326,6 @@
                             <goal>wsgen</goal>
                         </goals>
                         <configuration>
-                            <!-- Configura aquí tu servicio SOAP principal -->
                             <sei>com.techzone.ecommerce.techzone.service.soap.ProductSoapService</sei>
                             <genWsdl>true</genWsdl>
                             <resourceDestDir>${project.build.directory}/generated/wsdl</resourceDestDir>
@@ -335,6 +335,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 </project>
