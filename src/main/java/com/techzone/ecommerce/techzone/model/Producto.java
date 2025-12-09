@@ -11,7 +11,7 @@ import java.util.Objects;
  * Representa un producto en el sistema de e-commerce
  *
  * @author TechZone Team
- * @version 2.0 - Optimizado con campos transient para mejor rendimiento
+ * @version 2.1 - Agregado campo precioOriginal para mostrar descuentos
  */
 public class Producto implements Serializable {
 
@@ -91,6 +91,14 @@ public class Producto implements Serializable {
      */
     private transient Integer totalCalificaciones;
 
+    /**
+     * ✅ NUEVO: Precio original antes del descuento
+     * Este campo se calcula automáticamente y es igual al precio base
+     * cuando hay descuento. Si no hay descuento, es null.
+     * Útil para mostrar "precio tachado" en la UI
+     */
+    private transient BigDecimal precioOriginal;
+
     // ==================== ENUM ====================
 
     /**
@@ -133,6 +141,8 @@ public class Producto implements Serializable {
         this.precio = precio;
         this.stock = stock;
         this.idCategoria = idCategoria;
+        // Calcular precio original automáticamente
+        this.actualizarPrecioOriginal();
     }
 
     // ==================== GETTERS Y SETTERS - CAMPOS DB ====================
@@ -175,6 +185,8 @@ public class Producto implements Serializable {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+        // Al cambiar el precio, actualizar precio original
+        this.actualizarPrecioOriginal();
     }
 
     public Integer getStock() {
@@ -231,6 +243,8 @@ public class Producto implements Serializable {
 
     public void setDescuento(BigDecimal descuento) {
         this.descuento = descuento;
+        // Al cambiar el descuento, actualizar precio original
+        this.actualizarPrecioOriginal();
     }
 
     // ==================== GETTERS Y SETTERS - CAMPOS TRANSIENT ====================
@@ -285,11 +299,30 @@ public class Producto implements Serializable {
         this.totalCalificaciones = totalCalificaciones;
     }
 
+    /**
+     * ✅ NUEVO: Obtiene el precio original (antes del descuento)
+     * 
+     * @return Precio original o null si no hay descuento
+     */
+    public BigDecimal getPrecioOriginal() {
+        return precioOriginal;
+    }
+
+    /**
+     * ✅ NUEVO: Establece el precio original manualmente
+     * Normalmente no es necesario ya que se calcula automáticamente
+     * 
+     * @param precioOriginal Precio original
+     */
+    public void setPrecioOriginal(BigDecimal precioOriginal) {
+        this.precioOriginal = precioOriginal;
+    }
+
     // ==================== MÉTODOS DE NEGOCIO ====================
 
     /**
-     * Calcula el precio final con descuento aplicado
-     * Si no hay descuento, retorna el precio base
+     * ✅ ACTUALIZADO: Calcula el precio final con descuento aplicado
+     * También actualiza el campo precioOriginal automáticamente
      *
      * @return Precio con descuento aplicado
      */
@@ -303,6 +336,22 @@ public class Producto implements Serializable {
             return precio.subtract(montoDescuento);
         }
         return precio;
+    }
+
+    /**
+     * ✅ NUEVO: Actualiza automáticamente el campo precioOriginal
+     * Se llama cuando cambia el precio o el descuento
+     * Si hay descuento > 0, precioOriginal = precio base
+     * Si no hay descuento, precioOriginal = null
+     */
+    private void actualizarPrecioOriginal() {
+        if (descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0) {
+            // Si hay descuento, el precio original es el precio sin descuento
+            this.precioOriginal = this.precio;
+        } else {
+            // Si no hay descuento, no hay precio original a mostrar
+            this.precioOriginal = null;
+        }
     }
 
     /**
@@ -321,6 +370,18 @@ public class Producto implements Serializable {
      */
     public boolean tieneDescuento() {
         return descuento != null && descuento.compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    /**
+     * ✅ NUEVO: Calcula el monto de ahorro por el descuento
+     * 
+     * @return Monto ahorrado o BigDecimal.ZERO si no hay descuento
+     */
+    public BigDecimal getMontoAhorro() {
+        if (tieneDescuento()) {
+            return precio.subtract(getPrecioConDescuento());
+        }
+        return BigDecimal.ZERO;
     }
 
     // ==================== MÉTODOS AUXILIARES - IMÁGENES ====================
