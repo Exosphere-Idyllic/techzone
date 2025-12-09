@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ProductoService.ServiceException;
 import com.techzone.ecommerce.techzone.dao.CategoriaDAO;
 import com.techzone.ecommerce.techzone.model.Categoria;
 import com.techzone.ecommerce.techzone.model.Imagen;
@@ -143,7 +143,7 @@ public class ProductoServlet extends HttpServlet {
 
             request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
 
-        } catch (Exception e) {
+        } catch (ServiceException e) {
             logger.error("Error al listar productos: {}", e.getMessage());
             request.setAttribute("error", "Error al cargar los productos");
             request.getRequestDispatcher("/views/productos/catalogo.jsp").forward(request, response);
