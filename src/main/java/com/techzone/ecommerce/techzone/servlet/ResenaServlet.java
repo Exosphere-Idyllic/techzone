@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.model.Resena;
 import com.techzone.ecommerce.techzone.service.ResenaService;
 import com.techzone.ecommerce.techzone.service.ResenaService.EstadisticasResenas;
