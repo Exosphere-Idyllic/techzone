@@ -893,7 +893,7 @@
                                    value="1"
                                    min="1"
                                    max="${producto.stock}"
-                                   readonly>
+                                   onchange="document.getElementById('cantidadInput').value = this.value">
                             <button type="button" class="qty-btn" onclick="increaseQuantity()">
                                 <i class="fas fa-plus"></i>
                             </button>
@@ -1122,22 +1122,34 @@
     // Quantity controls
     function increaseQuantity() {
         const input = document.getElementById('quantity');
-        const max = parseInt(input.max);
-        const current = parseInt(input.value);
+        const cantidadInput = document.getElementById('cantidadInput');
+        const max = parseInt(input.getAttribute('max')) || parseInt(input.max);
+        const current = parseInt(input.value) || 1;
 
         if (current < max) {
-            input.value = current + 1;
-            document.getElementById('cantidadInput').value = current + 1;
+            const newValue = current + 1;
+            input.value = newValue;
+            if (cantidadInput) {
+                cantidadInput.value = newValue;
+            }
+            // Force update
+            input.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 
     function decreaseQuantity() {
         const input = document.getElementById('quantity');
-        const current = parseInt(input.value);
+        const cantidadInput = document.getElementById('cantidadInput');
+        const current = parseInt(input.value) || 1;
 
         if (current > 1) {
-            input.value = current - 1;
-            document.getElementById('cantidadInput').value = current - 1;
+            const newValue = current - 1;
+            input.value = newValue;
+            if (cantidadInput) {
+                cantidadInput.value = newValue;
+            }
+            // Force update
+            input.dispatchEvent(new Event('input', { bubbles: true }));
         }
     }
 

@@ -507,34 +507,32 @@
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
+            body {
+                padding-right: 0;
+            }
+            
             .catalog-layout {
                 grid-template-columns: 1fr;
             }
 
             .filters-sidebar {
                 position: static;
+                display: none;
             }
 
             .mobile-filters-toggle {
                 display: block;
             }
 
-            .filters-sidebar {
-                display: none;
-            }
-
             .filters-sidebar.mobile-open {
                 display: block;
                 margin-bottom: 30px;
+                position: relative;
             }
         }
 
         @media (max-width: 768px) {
-            body {
-                padding-right: 0;
-            }
-
             .catalog-container {
                 padding: 20px 15px;
             }
@@ -544,17 +542,25 @@
             }
 
             .products-toolbar {
+                flex-direction: column;
+                gap: 15px;
                 padding: 15px;
             }
 
             .toolbar-actions {
                 width: 100%;
-                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 10px;
             }
 
             .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 20px;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+            .results-info {
+                width: 100%;
+                text-align: center;
             }
         }
 
@@ -569,6 +575,15 @@
 
             .price-separator {
                 display: none;
+            }
+            
+            .view-toggle {
+                flex: 1;
+            }
+            
+            .sort-select {
+                flex: 1;
+                min-width: 150px;
             }
         }
     </style>
@@ -760,54 +775,43 @@
                 <div class="toolbar-actions">
                     <!-- View Toggle -->
                     <div class="view-toggle">
-                        <button class="view-btn active" 
-                                onclick="setView('grid')" 
+                        <button class="view-btn active"
+                                onclick="setView('grid')"
+                                id="gridViewBtn"
                                 title="Vista en cuadrícula">
                             <svg viewBox="0 0 24 24">
                                 <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
                             </svg>
                         </button>
-                        <div class="toolbar-actions">
-                            <!-- View Toggle -->
-                            <div class="view-toggle">
-                                <button class="view-btn active"
-                                        onclick="setView('grid')"
-                                        id="gridViewBtn"
-                                        title="Vista en cuadrícula">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
-                                    </svg>
-                                </button>
-                                <button class="view-btn"
-                                        onclick="setView('list')"
-                                        id="listViewBtn"
-                                        title="Vista en lista">
-                                    <svg viewBox="0 0 24 24">
-                                        <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Sort -->
-                            <select class="sort-select" name="orden" onchange="this.form.submit()">
-                                <option value="recientes" ${param.orden == 'recientes' ? 'selected' : ''}>
-                                    Más recientes
-                                </option>
-                                <option value="precio-asc" ${param.orden == 'precio-asc' ? 'selected' : ''}>
-                                    Precio: menor a mayor
-                                </option>
-                                <option value="precio-desc" ${param.orden == 'precio-desc' ? 'selected' : ''}>
-                                    Precio: mayor a menor
-                                </option>
-                                <option value="nombre" ${param.orden == 'nombre' ? 'selected' : ''}>
-                                    Nombre A-Z
-                                </option>
-                                <option value="populares" ${param.orden == 'populares' ? 'selected' : ''}>
-                                    Más populares
-                                </option>
-                            </select>
-                        </div>
+                        <button class="view-btn"
+                                onclick="setView('list')"
+                                id="listViewBtn"
+                                title="Vista en lista">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
+                            </svg>
+                        </button>
                     </div>
+
+                    <!-- Sort -->
+                    <select class="sort-select" name="orden" onchange="this.form.submit()">
+                        <option value="recientes" ${param.orden == 'recientes' ? 'selected' : ''}>
+                            Más recientes
+                        </option>
+                        <option value="precio-asc" ${param.orden == 'precio-asc' ? 'selected' : ''}>
+                            Precio: menor a mayor
+                        </option>
+                        <option value="precio-desc" ${param.orden == 'precio-desc' ? 'selected' : ''}>
+                            Precio: mayor a menor
+                        </option>
+                        <option value="nombre" ${param.orden == 'nombre' ? 'selected' : ''}>
+                            Nombre A-Z
+                        </option>
+                        <option value="populares" ${param.orden == 'populares' ? 'selected' : ''}>
+                            Más populares
+                        </option>
+                    </select>
+                </div>
 
                     <!-- Products Grid -->
                     <c:choose>

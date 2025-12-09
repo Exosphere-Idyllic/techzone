@@ -415,7 +415,7 @@
     <p class="page-subtitle">
         <c:choose>
             <c:when test="${not empty carrito and carrito.items.size() > 0}">
-                ${carrito.items.size()} producto(s) en tu carrito
+                ${carrito.cantidadTotal} item(s) en tu carrito
             </c:when>
             <c:otherwise>
                 Tu carrito está vacío
@@ -485,7 +485,7 @@
 
                             <div class="item-actions">
                                 <div class="item-price">
-                                    $<fmt:formatNumber value="${item.producto.precio * item.cantidad}" pattern="#,##0.00"/>
+                                    $<fmt:formatNumber value="${item.subtotal}" pattern="#,##0.00"/>
                                 </div>
 
                                 <form action="${pageContext.request.contextPath}/carrito/actualizar"
@@ -528,7 +528,25 @@
                     <div class="summary-row">
                         <span class="summary-label">Subtotal</span>
                         <span class="summary-value">
-                                $<fmt:formatNumber value="${subtotal}" pattern="#,##0.00"/>
+                                $<fmt:formatNumber value="${carrito.subtotal}" pattern="#,##0.00"/>
+                            </span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span class="summary-label">Descuento</span>
+                        <span class="summary-value">
+                                -$<fmt:formatNumber value="${carrito.totalDescuentos}" pattern="#,##0.00"/>
+                            </span>
+                    </div>
+
+                    <c:set var="subtotalConDescuento" value="${carrito.subtotal - carrito.totalDescuentos}" />
+                    <c:set var="iva" value="${subtotalConDescuento * 0.15}" />
+                    <c:set var="totalConIva" value="${subtotalConDescuento + iva}" />
+
+                    <div class="summary-row">
+                        <span class="summary-label">IVA (15%)</span>
+                        <span class="summary-value">
+                                $<fmt:formatNumber value="${iva}" pattern="#,##0.00"/>
                             </span>
                     </div>
 
@@ -537,17 +555,10 @@
                         <span class="summary-value">Gratis</span>
                     </div>
 
-                    <div class="summary-row">
-                        <span class="summary-label">Descuento</span>
-                        <span class="summary-value">
-                                -$<fmt:formatNumber value="${descuento}" pattern="#,##0.00"/>
-                            </span>
-                    </div>
-
                     <div class="summary-row summary-total">
                         <span class="summary-label">Total</span>
                         <span class="summary-value">
-                                $<fmt:formatNumber value="${total}" pattern="#,##0.00"/>
+                                $<fmt:formatNumber value="${totalConIva}" pattern="#,##0.00"/>
                             </span>
                     </div>
 

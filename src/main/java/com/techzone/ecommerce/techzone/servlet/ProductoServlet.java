@@ -50,7 +50,7 @@ public class ProductoServlet extends HttpServlet {
     private CategoriaDAO categoriaDAO;
 
     // Configuración de paginación
-    private static final int PRODUCTOS_POR_PAGINA = 12;
+    private static final int PRODUCTOS_POR_PAGINA = 10;
 
     @Override
     public void init() throws ServletException {

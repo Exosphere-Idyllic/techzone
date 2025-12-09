@@ -619,13 +619,13 @@
         </c:when>
         <c:otherwise>
             <div class="categories-grid">
-                <c:forEach items="${categorias}" var="categoria">
+                <c:forEach items="${categorias}" var="categoriaInfo">
                     <div class="category-card">
                         <div class="category-image-wrapper">
                             <c:choose>
-                                <c:when test="${not empty categoria.imagen}">
-                                    <img src="${pageContext.request.contextPath}/uploads/${categoria.imagen}"
-                                         alt="${categoria.nombre}"
+                                <c:when test="${not empty categoriaInfo.categoria.imagen}">
+                                    <img src="${pageContext.request.contextPath}/uploads/${categoriaInfo.categoria.imagen}"
+                                         alt="${categoriaInfo.categoria.nombre}"
                                          class="category-image">
                                 </c:when>
                                 <c:otherwise>
@@ -639,15 +639,15 @@
                         <div class="category-content">
                             <div class="category-header">
                                 <div>
-                                    <h3 class="category-name">${categoria.nombre}</h3>
+                                    <h3 class="category-name">${categoriaInfo.categoria.nombre}</h3>
                                 </div>
                                 <span class="category-badge">
-                                    ${categoria.cantidadProductos} items
+                                    ${categoriaInfo.cantidadProductos} items
                                 </span>
                             </div>
 
-                            <c:if test="${not empty categoria.descripcion}">
-                                <p class="category-description">${categoria.descripcion}</p>
+                            <c:if test="${not empty categoriaInfo.categoria.descripcion}">
+                                <p class="category-description">${categoriaInfo.categoria.descripcion}</p>
                             </c:if>
 
                             <div class="category-stats">
@@ -655,23 +655,13 @@
                                     <svg viewBox="0 0 24 24">
                                         <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
                                     </svg>
-                                    <span class="category-stat-value">${categoria.cantidadProductos}</span>
+                                    <span class="category-stat-value">${categoriaInfo.cantidadProductos}</span>
                                     <span class="category-stat-label">productos</span>
                                 </div>
-
-                                <c:if test="${not empty categoria.productosEnOferta && categoria.productosEnOferta > 0}">
-                                    <div class="category-stat">
-                                        <svg viewBox="0 0 24 24">
-                                            <path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/>
-                                        </svg>
-                                        <span class="category-stat-value">${categoria.productosEnOferta}</span>
-                                        <span class="category-stat-label">ofertas</span>
-                                    </div>
-                                </c:if>
                             </div>
 
                             <div class="category-footer">
-                                <a href="${pageContext.request.contextPath}/productos/categoria?id=${categoria.idCategoria}"
+                                <a href="${pageContext.request.contextPath}/productos/categoria?id=${categoriaInfo.categoria.idCategoria}"
                                    class="btn-view-category">
                                     <span>Explorar Categoría</span>
                                     <svg viewBox="0 0 24 24">
