@@ -1,6 +1,6 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.google.protobuf.ServiceException;
+import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.model.Usuario;
 import com.techzone.ecommerce.techzone.service.UsuarioService;
 import com.techzone.ecommerce.techzone.util.SessionUtil;
