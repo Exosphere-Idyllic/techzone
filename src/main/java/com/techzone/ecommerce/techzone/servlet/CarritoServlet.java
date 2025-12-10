@@ -1,98 +1,68 @@
 package com.techzone.ecommerce.techzone.servlet;
 
-import com.techzone.ecommerce.techzone.service.ServiceException;
+import com.techzone.ecommerce.techzone.dao.CarritoDAO;
+import com.techzone.ecommerce.techzone.dao.ProductoDAO;
+import com.techzone.ecommerce.techzone.model.Carrito;
+import com.techzone.ecommerce.techzone.model.Producto;
+import com.techzone.ecommerce.techzone.model.Usuario;
 import com.techzone.ecommerce.techzone.service.CarritoService;
-import com.techzone.ecommerce.techzone.service.CarritoService.CarritoCompleto;
-import com.techzone.ecommerce.techzone.util.SessionUtil;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
 
 /**
- * Servlet para gestión del carrito de compras
- * Requiere autenticación (protegido por AuthenticationFilter)
- * 
- * @author TechZone Team
+ * Servlet para gestionar el carrito de compras
  */
 @WebServlet(name = "CarritoServlet", urlPatterns = {
         "/carrito",
         "/carrito/agregar",
         "/carrito/actualizar",
         "/carrito/eliminar",
-        "/carrito/vaciar",
-        "/carrito/contador"
+        "/carrito/vaciar"
 })
 public class CarritoServlet extends HttpServlet {
 
-    private static final Logger logger = LoggerFactory.getLogger(CarritoServlet.class);
+    private CarritoDAO carritoDAO;
+    private ProductoDAO productoDAO;
     private CarritoService carritoService;
 
     @Override
     public void init() throws ServletException {
-        super.init();
-        this.carritoService = new CarritoService();
-        logger.info("CarritoServlet inicializado");
+        carritoDAO = new CarritoDAO();
+        productoDAO = new ProductoDAO();
+        carritoService = new CarritoService();
     }
-
-    // ==================== MÉTODO GET ====================
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        logger.debug("GET request: {}", path);
-
-        // Verificar autenticación
-        if (!SessionUtil.isAuthenticated(request)) {
-            response.sendRedirect(request.getContextPath() + "/login?error=sesion_requerida");
-            return;
-        }
 
         try {
-            switch (path) {
-                case "/carrito":
-                    verCarrito(request, response);
-                    break;
-                case "/carrito/contador":
-                    obtenerContador(request, response);
-                    break;
-                default:
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            if ("/carrito".equals(path)) {
+                mostrarCarrito(request, response);
             }
-        } catch (Exception e) {
-            logger.error("Error en GET {}: {}", path, e.getMessage(), e);
-            request.setAttribute("error", "Error al procesar la solicitud");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al cargar el carrito");
             request.getRequestDispatcher("/views/error.jsp").forward(request, response);
         }
     }
-
-    // ==================== MÉTODO POST ====================
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String path = request.getServletPath();
-        logger.debug("POST request: {}", path);
-
-        // Verificar autenticación
-        if (!SessionUtil.isAuthenticated(request)) {
-            // Si es AJAX, responder con JSON
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Sesión expirada", null);
-                return;
-            }
-            response.sendRedirect(request.getContextPath() + "/login?error=sesion_requerida");
-            return;
-        }
 
         try {
             switch (path) {
@@ -109,343 +79,296 @@ public class CarritoServlet extends HttpServlet {
                     vaciarCarrito(request, response);
                     break;
                 default:
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    response.sendRedirect(request.getContextPath() + "/carrito");
             }
-        } catch (Exception e) {
-            logger.error("Error en POST {}: {}", path, e.getMessage(), e);
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Error al procesar la solicitud", null);
-            } else {
-                request.setAttribute("error", "Error al procesar la solicitud");
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Error al procesar la solicitud");
+            doGet(request, response);
         }
     }
-
-    // ==================== MÉTODOS GET ====================
 
     /**
      * Muestra el carrito de compras
      */
-    private void verCarrito(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    private void mostrarCarrito(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException {
 
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
+        HttpSession session = request.getSession();
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
-        try {
-            // Obtener carrito completo
-            CarritoCompleto carrito = carritoService.obtenerCarritoCompleto(idUsuario);
-
-            // Actualizar contador en sesión
-            SessionUtil.setItemsCarrito(request, carrito.getCantidadTotal());
-
-            // Enviar datos a la vista
-            request.setAttribute("carrito", carrito);
-            request.setAttribute("items", carrito.getItems());
-            request.setAttribute("subtotal", carrito.getSubtotal());
-            request.setAttribute("totalDescuentos", carrito.getTotalDescuentos());
-            request.setAttribute("total", carrito.getTotal());
-            request.setAttribute("cantidadItems", carrito.getCantidadTotal());
-            request.setAttribute("problemas", carrito.getProblemas());
-
-            logger.debug("Carrito usuario {}: {} items, total ${}", 
-                    idUsuario, carrito.getCantidadTotal(), carrito.getTotal());
-
-            request.getRequestDispatcher("/views/carrito/ver-carrito.jsp").forward(request, response);
-
-        } catch (ServiceException e) {
-            logger.error("Error al obtener carrito: {}", e.getMessage());
-            request.setAttribute("error", "Error al cargar el carrito");
-            request.getRequestDispatcher("/views/carrito/ver-carrito.jsp").forward(request, response);
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
-    }
 
-    /**
-     * Obtiene el contador de items del carrito (para AJAX)
-     */
-    private void obtenerContador(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+        // Obtener items del carrito con información de productos
+        List<Carrito> items = carritoDAO.obtenerConProductosPorUsuario(usuario.getIdUsuario());
 
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
-
-        try {
-            int cantidad = carritoService.contarCantidadTotal(idUsuario);
-            SessionUtil.setItemsCarrito(request, cantidad);
-            enviarRespuestaJson(response, true, null, cantidad);
-
-        } catch (ServiceException e) {
-            logger.error("Error al obtener contador: {}", e.getMessage());
-            enviarRespuestaJson(response, false, e.getMessage(), 0);
+        // Cargar información completa de cada producto
+        for (Carrito item : items) {
+            Producto producto = productoDAO.buscarPorId(item.getIdProducto()).orElse(null);
+            item.setProducto(producto);
         }
-    }
 
-    // ==================== MÉTODOS POST ====================
+        // Crear objeto CarritoResumen para la vista
+        CarritoResumen carritoResumen = new CarritoResumen(items);
+
+        request.setAttribute("carrito", carritoResumen);
+        request.getRequestDispatcher("/views/carrito/ver-carrito.jsp").forward(request, response);
+    }
 
     /**
      * Agrega un producto al carrito
      */
     private void agregarAlCarrito(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+            throws ServletException, IOException, SQLException {
 
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
-        String idProductoParam = request.getParameter("idProducto");
-        String cantidadParam = request.getParameter("cantidad");
+        HttpSession session = request.getSession();
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
-        // Validar parámetros
-        if (idProductoParam == null || idProductoParam.isEmpty()) {
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Producto no especificado", null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", "Producto no especificado");
-                response.sendRedirect(request.getContextPath() + "/productos");
-            }
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login?redirect=carrito");
             return;
         }
 
         try {
-            int idProducto = Integer.parseInt(idProductoParam);
-            int cantidad = 1;
+            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+            int cantidad = Integer.parseInt(request.getParameter("cantidad"));
 
-            if (cantidadParam != null && !cantidadParam.isEmpty()) {
-                cantidad = Integer.parseInt(cantidadParam);
+            // Validar producto y stock
+            Producto producto = productoDAO.buscarPorId(idProducto)
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+
+            if (cantidad <= 0) {
+                session.setAttribute("error", "Cantidad inválida");
+                response.sendRedirect(request.getContextPath() + "/producto?id=" + idProducto);
+                return;
             }
 
-            // Agregar al carrito
-            carritoService.agregarAlCarrito(idUsuario, idProducto, cantidad);
+            if (cantidad > producto.getStock()) {
+                session.setAttribute("error", "Stock insuficiente. Solo hay " + producto.getStock() + " unidades disponibles");
+                response.sendRedirect(request.getContextPath() + "/producto?id=" + idProducto);
+                return;
+            }
 
-            // Actualizar contador en sesión
-            int nuevoContador = carritoService.contarCantidadTotal(idUsuario);
-            SessionUtil.setItemsCarrito(request, nuevoContador);
+            // Agregar o actualizar en el carrito
+            boolean agregado = carritoDAO.agregarOActualizar(
+                    usuario.getIdUsuario(),
+                    idProducto,
+                    cantidad
+            );
 
-            logger.info("Producto {} agregado al carrito del usuario {}", idProducto, idUsuario);
-
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, true, "Producto agregado al carrito", nuevoContador);
+            if (agregado) {
+                session.setAttribute("mensaje", "Producto agregado al carrito");
             } else {
-                SessionUtil.setFlashMessage(request, "success", "Producto agregado al carrito");
-                
-                // Redirigir a la página anterior o al carrito
-                String referer = request.getHeader("Referer");
-                if (referer != null && !referer.isEmpty()) {
-                    response.sendRedirect(referer);
+                session.setAttribute("error", "No se pudo agregar al carrito");
+            }
+
+            // Actualizar contador del carrito en sesión
+            actualizarContadorCarrito(session, usuario.getIdUsuario());
+
+        } catch (NumberFormatException e) {
+            session.setAttribute("error", "Datos inválidos");
+        } catch (IllegalArgumentException e) {
+            session.setAttribute("error", e.getMessage());
+        }
+
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            response.sendRedirect(referer);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/productos");
+        }
+    }
+
+    /**
+     * Actualiza la cantidad de un producto en el carrito
+     */
+    private void actualizarCantidad(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException, SQLException {
+
+        HttpSession session = request.getSession();
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        try {
+            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
+            String accion = request.getParameter("accion");
+
+            // Buscar el item en el carrito
+            Carrito item = carritoDAO.buscarPorUsuarioYProducto(
+                    usuario.getIdUsuario(),
+                    idProducto
+            ).orElse(null);
+
+            if (item == null) {
+                session.setAttribute("error", "Producto no encontrado en el carrito");
+                response.sendRedirect(request.getContextPath() + "/carrito");
+                return;
+            }
+
+            // Validar stock
+            Producto producto = productoDAO.buscarPorId(idProducto)
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+
+            int nuevaCantidad = item.getCantidad();
+
+            if ("incrementar".equals(accion)) {
+                nuevaCantidad++;
+            } else if ("decrementar".equals(accion)) {
+                nuevaCantidad--;
+            }
+
+            // Validaciones
+            if (nuevaCantidad <= 0) {
+                // Si la cantidad es 0 o menos, eliminar del carrito
+                carritoDAO.eliminar(item.getIdCarrito());
+                session.setAttribute("mensaje", "Producto eliminado del carrito");
+            } else if (nuevaCantidad > producto.getStock()) {
+                session.setAttribute("error", "Stock insuficiente. Solo hay " + producto.getStock() + " unidades disponibles");
+            } else {
+                // Actualizar cantidad
+                boolean actualizado = carritoDAO.actualizarCantidad(item.getIdCarrito(), nuevaCantidad);
+                if (actualizado) {
+                    session.setAttribute("mensaje", "Cantidad actualizada");
                 } else {
-                    response.sendRedirect(request.getContextPath() + "/carrito");
+                    session.setAttribute("error", "No se pudo actualizar la cantidad");
                 }
             }
 
+            // Actualizar contador del carrito
+            actualizarContadorCarrito(session, usuario.getIdUsuario());
+
         } catch (NumberFormatException e) {
-            logger.warn("Parámetros inválidos: idProducto={}, cantidad={}", idProductoParam, cantidadParam);
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Parámetros inválidos", null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", "Parámetros inválidos");
-                response.sendRedirect(request.getContextPath() + "/productos");
-            }
-        } catch (ServiceException e) {
-            logger.error("Error al agregar al carrito: {}", e.getMessage());
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, e.getMessage(), null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", e.getMessage());
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
+            session.setAttribute("error", "Datos inválidos");
+        } catch (IllegalArgumentException e) {
+            session.setAttribute("error", e.getMessage());
         }
+
+        response.sendRedirect(request.getContextPath() + "/carrito");
     }
 
     /**
-     * Actualiza la cantidad de un item en el carrito
-     */
-    private void actualizarCantidad(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
-        String idCarritoParam = request.getParameter("idCarrito");
-        String cantidadParam = request.getParameter("cantidad");
-
-        // Validar parámetros
-        if (idCarritoParam == null || cantidadParam == null) {
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Parámetros incompletos", null);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-            return;
-        }
-
-        try {
-            int idCarrito = Integer.parseInt(idCarritoParam);
-            int cantidad = Integer.parseInt(cantidadParam);
-
-            // Si cantidad es 0 o menor, eliminar el item
-            if (cantidad <= 0) {
-                carritoService.eliminarDelCarrito(idCarrito);
-                logger.info("Item {} eliminado del carrito (cantidad 0)", idCarrito);
-            } else {
-                carritoService.actualizarCantidad(idCarrito, cantidad);
-                logger.info("Item {} actualizado a cantidad {}", idCarrito, cantidad);
-            }
-
-            // Obtener nuevo total y contador
-            CarritoCompleto carrito = carritoService.obtenerCarritoCompleto(idUsuario);
-            SessionUtil.setItemsCarrito(request, carrito.getCantidadTotal());
-
-            if (isAjaxRequest(request)) {
-                // Enviar respuesta con datos actualizados
-                String jsonData = String.format(
-                        "{\"success\":true,\"cantidadTotal\":%d,\"subtotal\":%.2f,\"total\":%.2f}",
-                        carrito.getCantidadTotal(),
-                        carrito.getSubtotal(),
-                        carrito.getTotal()
-                );
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                PrintWriter out = response.getWriter();
-                out.print(jsonData);
-                out.flush();
-            } else {
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-
-        } catch (NumberFormatException e) {
-            logger.warn("Parámetros inválidos: idCarrito={}, cantidad={}", idCarritoParam, cantidadParam);
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Parámetros inválidos", null);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-        } catch (ServiceException e) {
-            logger.error("Error al actualizar cantidad: {}", e.getMessage());
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, e.getMessage(), null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", e.getMessage());
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-        }
-    }
-
-    /**
-     * Elimina un item del carrito
+     * Elimina un producto del carrito
      */
     private void eliminarDelCarrito(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws ServletException, IOException, SQLException {
 
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
-        String idCarritoParam = request.getParameter("idCarrito");
+        HttpSession session = request.getSession();
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
-        // Validar parámetro
-        if (idCarritoParam == null || idCarritoParam.isEmpty()) {
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "Item no especificado", null);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
-            int idCarrito = Integer.parseInt(idCarritoParam);
+            int idProducto = Integer.parseInt(request.getParameter("idProducto"));
 
-            // Eliminar item
-            carritoService.eliminarDelCarrito(idCarrito);
+            boolean eliminado = carritoDAO.eliminarPorUsuarioYProducto(
+                    usuario.getIdUsuario(),
+                    idProducto
+            );
 
-            // Actualizar contador en sesión
-            int nuevoContador = carritoService.contarCantidadTotal(idUsuario);
-            SessionUtil.setItemsCarrito(request, nuevoContador);
-
-            logger.info("Item {} eliminado del carrito del usuario {}", idCarrito, idUsuario);
-
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, true, "Producto eliminado", nuevoContador);
+            if (eliminado) {
+                session.setAttribute("mensaje", "Producto eliminado del carrito");
             } else {
-                SessionUtil.setFlashMessage(request, "success", "Producto eliminado del carrito");
-                response.sendRedirect(request.getContextPath() + "/carrito");
+                session.setAttribute("error", "No se pudo eliminar el producto");
             }
+
+            // Actualizar contador del carrito
+            actualizarContadorCarrito(session, usuario.getIdUsuario());
 
         } catch (NumberFormatException e) {
-            logger.warn("ID de carrito inválido: {}", idCarritoParam);
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, "ID inválido", null);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-        } catch (ServiceException e) {
-            logger.error("Error al eliminar del carrito: {}", e.getMessage());
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, e.getMessage(), null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", e.getMessage());
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
+            session.setAttribute("error", "Datos inválidos");
         }
+
+        response.sendRedirect(request.getContextPath() + "/carrito");
     }
 
     /**
-     * Vacía completamente el carrito
+     * Vacía el carrito completamente
      */
     private void vaciarCarrito(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+            throws ServletException, IOException, SQLException {
 
-        Integer idUsuario = SessionUtil.getIdUsuario(request);
+        HttpSession session = request.getSession();
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
 
-        try {
-            carritoService.vaciarCarrito(idUsuario);
-            SessionUtil.setItemsCarrito(request, 0);
-
-            logger.info("Carrito del usuario {} vaciado", idUsuario);
-
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, true, "Carrito vaciado", 0);
-            } else {
-                SessionUtil.setFlashMessage(request, "success", "Carrito vaciado correctamente");
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
-
-        } catch (ServiceException e) {
-            logger.error("Error al vaciar carrito: {}", e.getMessage());
-            if (isAjaxRequest(request)) {
-                enviarRespuestaJson(response, false, e.getMessage(), null);
-            } else {
-                SessionUtil.setFlashMessage(request, "error", e.getMessage());
-                response.sendRedirect(request.getContextPath() + "/carrito");
-            }
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
-    }
 
-    // ==================== MÉTODOS AUXILIARES ====================
+        boolean vaciado = carritoDAO.vaciarCarrito(usuario.getIdUsuario());
 
-    /**
-     * Verifica si es una petición AJAX
-     */
-    private boolean isAjaxRequest(HttpServletRequest request) {
-        String xRequestedWith = request.getHeader("X-Requested-With");
-        return "XMLHttpRequest".equals(xRequestedWith);
+        if (vaciado) {
+            session.setAttribute("mensaje", "Carrito vaciado");
+        } else {
+            session.setAttribute("error", "No se pudo vaciar el carrito");
+        }
+
+        // Actualizar contador del carrito
+        session.setAttribute("cantidadCarrito", 0);
+
+        response.sendRedirect(request.getContextPath() + "/carrito");
     }
 
     /**
-     * Envía una respuesta JSON simple
+     * Actualiza el contador del carrito en la sesión
      */
-    private void enviarRespuestaJson(HttpServletResponse response, boolean success,
-                                      String mensaje, Object data) throws IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+    private void actualizarContadorCarrito(HttpSession session, int idUsuario) throws SQLException {
+        int cantidadTotal = carritoDAO.contarCantidadTotalPorUsuario(idUsuario);
+        session.setAttribute("cantidadCarrito", cantidadTotal);
+    }
 
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"success\":").append(success);
+    /**
+     * Clase interna para representar el resumen del carrito
+     */
+    public static class CarritoResumen {
+        private List<Carrito> items;
+        private BigDecimal subtotal;
+        private BigDecimal totalDescuentos;
+        private int cantidadTotal;
 
-        if (mensaje != null) {
-            json.append(",\"mensaje\":\"").append(mensaje.replace("\"", "\\\"")).append("\"");
+        public CarritoResumen(List<Carrito> items) {
+            this.items = items;
+            calcularTotales();
         }
 
-        if (data != null) {
-            json.append(",\"data\":").append(data);
+        private void calcularTotales() {
+            subtotal = BigDecimal.ZERO;
+            totalDescuentos = BigDecimal.ZERO;
+            cantidadTotal = 0;
+
+            for (Carrito item : items) {
+                if (item.getProducto() != null) {
+                    BigDecimal precioUnitario = item.getProducto().getPrecio();
+                    BigDecimal subtotalItem = precioUnitario.multiply(new BigDecimal(item.getCantidad()));
+                    subtotal = subtotal.add(subtotalItem);
+
+                    // Calcular descuento si existe
+                    if (item.getProducto().getDescuento() != null &&
+                            item.getProducto().getDescuento().compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal descuento = subtotalItem.multiply(item.getProducto().getDescuento())
+                                .divide(new BigDecimal(100));
+                        totalDescuentos = totalDescuentos.add(descuento);
+                    }
+
+                    cantidadTotal += item.getCantidad();
+                }
+            }
         }
 
-        json.append("}");
-
-        PrintWriter out = response.getWriter();
-        out.print(json.toString());
-        out.flush();
+        // Getters
+        public List<Carrito> getItems() { return items; }
+        public BigDecimal getSubtotal() { return subtotal; }
+        public BigDecimal getTotalDescuentos() { return totalDescuentos; }
+        public int getCantidadTotal() { return cantidadTotal; }
     }
 }

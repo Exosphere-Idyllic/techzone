@@ -1,60 +1,109 @@
 package com.techzone.ecommerce.techzone.model;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.Date;
 
-public class Pedido implements Serializable {
+/**
+ * Modelo para representar un pedido
+ * @author TechZone Team
+ */
+public class Pedido {
 
-    private static final long serialVersionUID = 1L;
-
-    private Integer idPedido;
-    private Integer idUsuario;
+    private int idPedido;
+    private int idUsuario;
     private LocalDateTime fechaPedido;
+    private String estado; // PENDIENTE, PROCESANDO, ENVIADO, ENTREGADO, CANCELADO
     private BigDecimal total;
-    private EstadoPedido estado;
     private String direccionEnvio;
     private String metodoPago;
+    private String notas;
 
-    // Campos adicionales para joins (no se guardan en DB)
-    private transient Usuario usuario;
-    private transient List<DetallePedido> detalles;
+    // Relación con Usuario (para joins)
+    private Usuario usuario;
 
-    public enum EstadoPedido {
-        PENDIENTE, PROCESANDO, ENVIADO, ENTREGADO, CANCELADO
-    }
-
+    // Constructores
     public Pedido() {
         this.fechaPedido = LocalDateTime.now();
-        this.estado = EstadoPedido.PENDIENTE;
-        this.total = BigDecimal.ZERO;
-        this.detalles = new ArrayList<>();
+        this.estado = "PENDIENTE";
     }
 
-    public Pedido(Integer idUsuario, String direccionEnvio, String metodoPago) {
+    public Pedido(int idUsuario, BigDecimal total, String direccionEnvio, String metodoPago) {
         this();
         this.idUsuario = idUsuario;
+        this.total = total;
         this.direccionEnvio = direccionEnvio;
         this.metodoPago = metodoPago;
     }
 
+    // Métodos de utilidad
+
+    /**
+     * Obtiene la fecha del pedido como Date (para compatibilidad con JSTL)
+     */
+    public Date getFechaPedidoAsDate() {
+        if (fechaPedido != null) {
+            return java.sql.Timestamp.valueOf(fechaPedido);
+        }
+        return null;
+    }
+
+    /**
+     * Verifica si el pedido se puede cancelar
+     */
+    public boolean esCancelable() {
+        return "PENDIENTE".equals(estado) || "PROCESANDO".equals(estado);
+    }
+
+    /**
+     * Verifica si el pedido está completado
+     */
+    public boolean estaCompletado() {
+        return "ENTREGADO".equals(estado);
+    }
+
+    /**
+     * Verifica si el pedido está cancelado
+     */
+    public boolean estaCancelado() {
+        return "CANCELADO".equals(estado);
+    }
+
+    /**
+     * Obtiene el color del estado para la UI
+     */
+    public String getColorEstado() {
+        switch (estado) {
+            case "PENDIENTE":
+                return "#ffbb33";
+            case "PROCESANDO":
+                return "#00d4ff";
+            case "ENVIADO":
+                return "#0099cc";
+            case "ENTREGADO":
+                return "#00C851";
+            case "CANCELADO":
+                return "#ff4444";
+            default:
+                return "#b0b0b0";
+        }
+    }
+
     // Getters y Setters
-    public Integer getIdPedido() {
+
+    public int getIdPedido() {
         return idPedido;
     }
 
-    public void setIdPedido(Integer idPedido) {
+    public void setIdPedido(int idPedido) {
         this.idPedido = idPedido;
     }
 
-    public Integer getIdUsuario() {
+    public int getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(Integer idUsuario) {
+    public void setIdUsuario(int idUsuario) {
         this.idUsuario = idUsuario;
     }
 
@@ -66,20 +115,20 @@ public class Pedido implements Serializable {
         this.fechaPedido = fechaPedido;
     }
 
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
     public BigDecimal getTotal() {
         return total;
     }
 
     public void setTotal(BigDecimal total) {
         this.total = total;
-    }
-
-    public EstadoPedido getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoPedido estado) {
-        this.estado = estado;
     }
 
     public String getDireccionEnvio() {
@@ -98,6 +147,14 @@ public class Pedido implements Serializable {
         this.metodoPago = metodoPago;
     }
 
+    public String getNotas() {
+        return notas;
+    }
+
+    public void setNotas(String notas) {
+        this.notas = notas;
+    }
+
     public Usuario getUsuario() {
         return usuario;
     }
@@ -106,58 +163,16 @@ public class Pedido implements Serializable {
         this.usuario = usuario;
     }
 
-    public List<DetallePedido> getDetalles() {
-        return detalles;
-    }
-
-    public void setDetalles(List<DetallePedido> detalles) {
-        this.detalles = detalles;
-    }
-
-    // Métodos auxiliares
-    public void calcularTotal() {
-        if (detalles != null && !detalles.isEmpty()) {
-            this.total = detalles.stream()
-                    .map(DetallePedido::getSubtotal)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-        }
-    }
-
-    public void agregarDetalle(DetallePedido detalle) {
-        if (this.detalles == null) {
-            this.detalles = new ArrayList<>();
-        }
-        detalles.add(detalle);
-        calcularTotal();
-    }
-
-    public int getCantidadItems() {
-        if (detalles == null) return 0;
-        return detalles.stream()
-                .mapToInt(DetallePedido::getCantidad)
-                .sum();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Pedido pedido = (Pedido) o;
-        return Objects.equals(idPedido, pedido.idPedido);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(idPedido);
-    }
-
     @Override
     public String toString() {
         return "Pedido{" +
                 "idPedido=" + idPedido +
+                ", idUsuario=" + idUsuario +
                 ", fechaPedido=" + fechaPedido +
+                ", estado='" + estado + '\'' +
                 ", total=" + total +
-                ", estado=" + estado +
+                ", direccionEnvio='" + direccionEnvio + '\'' +
+                ", metodoPago='" + metodoPago + '\'' +
                 '}';
     }
 }

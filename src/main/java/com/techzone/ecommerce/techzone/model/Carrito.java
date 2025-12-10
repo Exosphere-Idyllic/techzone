@@ -1,64 +1,105 @@
 package com.techzone.ecommerce.techzone.model;
 
-import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
-public class Carrito implements Serializable {
+/**
+ * Modelo para representar un item del carrito de compras
+ * @author TechZone Team
+ */
+public class Carrito {
 
-    private static final long serialVersionUID = 1L;
-
-    private Integer idCarrito;
-    private Integer idUsuario;
-    private Integer idProducto;
-    private Integer cantidad;
+    private int idCarrito;
+    private int idUsuario;
+    private int idProducto;
+    private int cantidad;
     private LocalDateTime fechaAgregado;
 
-    // Campos adicionales para joins (no se guardan en DB)
-    private transient Usuario usuario;
-    private transient Producto producto;
+    // Relación con Producto (para joins)
+    private Producto producto;
 
+    // Constructores
     public Carrito() {
         this.fechaAgregado = LocalDateTime.now();
     }
 
-    public Carrito(Integer idUsuario, Integer idProducto, Integer cantidad) {
-        this();
+    public Carrito(int idUsuario, int idProducto, int cantidad) {
         this.idUsuario = idUsuario;
         this.idProducto = idProducto;
         this.cantidad = cantidad;
+        this.fechaAgregado = LocalDateTime.now();
+    }
+
+    // Métodos de cálculo
+
+    /**
+     * Calcula el subtotal del item (precio x cantidad)
+     */
+    public BigDecimal getSubtotal() {
+        if (producto != null) {
+            BigDecimal precioUnitario = producto.getPrecio();
+
+            // Aplicar descuento si existe
+            if (producto.getDescuento() != null && producto.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal descuento = precioUnitario.multiply(producto.getDescuento())
+                        .divide(new BigDecimal(100));
+                precioUnitario = precioUnitario.subtract(descuento);
+            }
+
+            return precioUnitario.multiply(new BigDecimal(cantidad));
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * Obtiene el precio unitario con descuento aplicado
+     */
+    public BigDecimal getPrecioUnitarioConDescuento() {
+        if (producto != null) {
+            BigDecimal precioUnitario = producto.getPrecio();
+
+            if (producto.getDescuento() != null && producto.getDescuento().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal descuento = precioUnitario.multiply(producto.getDescuento())
+                        .divide(new BigDecimal(100));
+                precioUnitario = precioUnitario.subtract(descuento);
+            }
+
+            return precioUnitario;
+        }
+        return BigDecimal.ZERO;
     }
 
     // Getters y Setters
-    public Integer getIdCarrito() {
+
+    public int getIdCarrito() {
         return idCarrito;
     }
 
-    public void setIdCarrito(Integer idCarrito) {
+    public void setIdCarrito(int idCarrito) {
         this.idCarrito = idCarrito;
     }
 
-    public Integer getIdUsuario() {
+    public int getIdUsuario() {
         return idUsuario;
     }
 
-    public void setIdUsuario(Integer idUsuario) {
+    public void setIdUsuario(int idUsuario) {
         this.idUsuario = idUsuario;
     }
 
-    public Integer getIdProducto() {
+    public int getIdProducto() {
         return idProducto;
     }
 
-    public void setIdProducto(Integer idProducto) {
+    public void setIdProducto(int idProducto) {
         this.idProducto = idProducto;
     }
 
-    public Integer getCantidad() {
+    public int getCantidad() {
         return cantidad;
     }
 
-    public void setCantidad(Integer cantidad) {
+    public void setCantidad(int cantidad) {
         this.cantidad = cantidad;
     }
 
@@ -70,14 +111,6 @@ public class Carrito implements Serializable {
         this.fechaAgregado = fechaAgregado;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
-    }
-
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
     public Producto getProducto() {
         return producto;
     }
@@ -87,24 +120,14 @@ public class Carrito implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Carrito carrito = (Carrito) o;
-        return Objects.equals(idCarrito, carrito.idCarrito);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(idCarrito);
-    }
-
-    @Override
     public String toString() {
         return "Carrito{" +
                 "idCarrito=" + idCarrito +
+                ", idUsuario=" + idUsuario +
+                ", idProducto=" + idProducto +
                 ", cantidad=" + cantidad +
                 ", fechaAgregado=" + fechaAgregado +
+                ", producto=" + (producto != null ? producto.getNombre() : "null") +
                 '}';
     }
 }
