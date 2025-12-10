@@ -33,7 +33,14 @@ public class PedidoService {
 
     /**
      * Crea un pedido completo desde el carrito del usuario
-     * Esta operación es transaccional
+     */
+    public int crearPedidoDesdeCarrito(int idUsuario, String direccionEnvio,
+                                       String metodoPago) throws ServiceException {
+        return crearPedidoDesdeCarrito(idUsuario, direccionEnvio, metodoPago, null);
+    }
+
+    /**
+     * Crea un pedido completo desde el carrito del usuario con notas
      */
     public int crearPedidoDesdeCarrito(int idUsuario, String direccionEnvio,
                                        String metodoPago, String notas)
@@ -42,7 +49,6 @@ public class PedidoService {
         Connection conn = null;
 
         try {
-            // Obtener conexión para transacción
             conn = DatabaseConnection.getInstance().getConnection();
             conn.setAutoCommit(false);
 
@@ -100,7 +106,7 @@ public class PedidoService {
 
                 BigDecimal subtotal = precioUnitario.multiply(new BigDecimal(item.getCantidad()));
 
-                // Crear detalle (sin ID de pedido aún)
+                // Crear detalle
                 DetallePedido detalle = new DetallePedido();
                 detalle.setIdProducto(item.getIdProducto());
                 detalle.setCantidad(item.getCantidad());
@@ -181,15 +187,12 @@ public class PedidoService {
      */
     public PedidoCompleto obtenerPedidoCompleto(int idPedido) throws ServiceException {
         try {
-            // Obtener pedido
             Optional<Pedido> pedidoOpt = pedidoDAO.buscarPorId(idPedido);
             if (!pedidoOpt.isPresent()) {
                 throw new ServiceException("Pedido no encontrado");
             }
 
             Pedido pedido = pedidoOpt.get();
-
-            // Obtener detalles
             List<DetallePedido> detalles = detalleDAO.obtenerPorPedido(idPedido);
 
             // Enriquecer detalles con productos
@@ -245,7 +248,6 @@ public class PedidoService {
      */
     public void actualizarEstado(int idPedido, String nuevoEstado) throws ServiceException {
         try {
-            // Verificar que el pedido existe
             Optional<Pedido> pedidoOpt = pedidoDAO.buscarPorId(idPedido);
             if (!pedidoOpt.isPresent()) {
                 throw new ServiceException("Pedido no encontrado");
@@ -261,7 +263,6 @@ public class PedidoService {
                 );
             }
 
-            // Actualizar estado
             boolean actualizado = pedidoDAO.actualizarEstado(idPedido, nuevoEstado);
 
             if (!actualizado) {
@@ -274,16 +275,23 @@ public class PedidoService {
     }
 
     /**
-     * Cancela un pedido
+     * Cancela un pedido (sin motivo)
      */
     public void cancelarPedido(int idPedido) throws ServiceException {
+        cancelarPedido(idPedido, null, null);
+    }
+
+    /**
+     * Cancela un pedido con motivo y usuario
+     */
+    public void cancelarPedido(int idPedido, String motivo, Integer idUsuario)
+            throws ServiceException {
         Connection conn = null;
 
         try {
             conn = DatabaseConnection.getInstance().getConnection();
             conn.setAutoCommit(false);
 
-            // Obtener pedido
             Optional<Pedido> pedidoOpt = pedidoDAO.buscarPorId(idPedido);
             if (!pedidoOpt.isPresent()) {
                 throw new ServiceException("Pedido no encontrado");
@@ -291,7 +299,6 @@ public class PedidoService {
 
             Pedido pedido = pedidoOpt.get();
 
-            // Verificar que se puede cancelar
             if ("ENTREGADO".equals(pedido.getEstado())) {
                 throw new ServiceException("No se puede cancelar un pedido ya entregado");
             }
@@ -300,10 +307,8 @@ public class PedidoService {
                 throw new ServiceException("El pedido ya está cancelado");
             }
 
-            // Obtener detalles
+            // Obtener detalles y restaurar stock
             List<DetallePedido> detalles = detalleDAO.obtenerPorPedido(idPedido);
-
-            // Restaurar stock
             for (DetallePedido detalle : detalles) {
                 Optional<Producto> productoOpt = productoDAO.buscarPorId(detalle.getIdProducto());
                 if (productoOpt.isPresent()) {
@@ -314,9 +319,7 @@ public class PedidoService {
                 }
             }
 
-            // Actualizar estado a cancelado
             pedidoDAO.actualizarEstado(idPedido, "CANCELADO");
-
             conn.commit();
 
         } catch (SQLException e) {
@@ -342,9 +345,6 @@ public class PedidoService {
 
     // ==================== ESTADÍSTICAS ====================
 
-    /**
-     * Cuenta el total de pedidos de un usuario
-     */
     public int contarPedidosUsuario(int idUsuario) throws ServiceException {
         try {
             return pedidoDAO.contarPorUsuario(idUsuario);
@@ -353,9 +353,6 @@ public class PedidoService {
         }
     }
 
-    /**
-     * Cuenta pedidos por estado
-     */
     public int contarPedidosPorEstado(String estado) throws ServiceException {
         try {
             return pedidoDAO.contarPorEstado(estado);
@@ -366,26 +363,19 @@ public class PedidoService {
 
     // ==================== UTILIDADES PRIVADAS ====================
 
-    /**
-     * Valida si una transición de estado es válida
-     */
     private boolean esTransicionValida(String actual, String nuevo) {
-        // Desde CANCELADO no se puede cambiar
         if ("CANCELADO".equals(actual)) {
             return false;
         }
 
-        // Desde ENTREGADO solo se puede pasar a CANCELADO (devolución)
         if ("ENTREGADO".equals(actual)) {
             return "CANCELADO".equals(nuevo);
         }
 
-        // Siempre se puede cancelar
         if ("CANCELADO".equals(nuevo)) {
             return true;
         }
 
-        // Flujo normal: PENDIENTE -> PROCESANDO -> ENVIADO -> ENTREGADO
         switch (actual) {
             case "PENDIENTE":
                 return "PROCESANDO".equals(nuevo);
@@ -400,9 +390,6 @@ public class PedidoService {
 
     // ==================== CLASES INTERNAS ====================
 
-    /**
-     * Clase para representar un pedido completo con todos sus detalles
-     */
     public static class PedidoCompleto {
         private final Pedido pedido;
         private final List<DetallePedido> detalles;

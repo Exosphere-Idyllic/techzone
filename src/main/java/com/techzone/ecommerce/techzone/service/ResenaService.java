@@ -1,13 +1,9 @@
 package com.techzone.ecommerce.techzone.service;
 
-import com.techzone.ecommerce.techzone.service.ServiceException;
 import com.techzone.ecommerce.techzone.dao.*;
 import com.techzone.ecommerce.techzone.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +13,6 @@ import java.util.Optional;
  */
 public class ResenaService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ResenaService.class);
     private final ResenaDAO resenaDAO;
     private final ProductoDAO productoDAO;
     private final UsuarioDAO usuarioDAO;
@@ -40,9 +35,6 @@ public class ResenaService {
      * @param verificarCompra Si es true, verifica que el usuario haya comprado el producto
      */
     public int crearResena(Resena resena, boolean verificarCompra) throws ServiceException {
-        logger.info("Creando reseña para producto {} por usuario {}",
-                resena.getIdProducto(), resena.getIdUsuario());
-
         try {
             // Validar reseña
             validarResena(resena);
@@ -80,12 +72,9 @@ public class ResenaService {
 
             // Crear reseña
             int idResena = resenaDAO.crear(resena);
-
-            logger.info("Reseña creada exitosamente con ID: {}", idResena);
             return idResena;
 
         } catch (SQLException e) {
-            logger.error("Error al crear reseña", e);
             throw new ServiceException("Error al crear reseña", e);
         }
     }
@@ -95,8 +84,6 @@ public class ResenaService {
      */
     public void actualizarResena(Resena resena, int idUsuarioActualizador)
             throws ServiceException {
-        logger.info("Actualizando reseña {}", resena.getIdResena());
-
         try {
             // Verificar que la reseña existe
             Optional<Resena> resenaExistente = resenaDAO.buscarPorId(resena.getIdResena());
@@ -104,9 +91,8 @@ public class ResenaService {
                 throw new ServiceException("Reseña no encontrada");
             }
 
-            // Verificar que el usuario es el autor (o es admin)
-            if (!resenaExistente.get().getIdUsuario().equals(idUsuarioActualizador)) {
-                // Aquí podrías verificar si es admin
+            // Verificar que el usuario es el autor
+            if (resenaExistente.get().getIdUsuario() != idUsuarioActualizador) {
                 throw new ServiceException("No tienes permiso para editar esta reseña");
             }
 
@@ -122,15 +108,11 @@ public class ResenaService {
 
             // Actualizar
             boolean actualizado = resenaDAO.actualizar(resena);
-
             if (!actualizado) {
                 throw new ServiceException("No se pudo actualizar la reseña");
             }
 
-            logger.info("Reseña actualizada exitosamente");
-
         } catch (SQLException e) {
-            logger.error("Error al actualizar reseña", e);
             throw new ServiceException("Error al actualizar reseña", e);
         }
     }
@@ -139,8 +121,6 @@ public class ResenaService {
      * Elimina una reseña
      */
     public void eliminarResena(int idResena, int idUsuarioEliminador) throws ServiceException {
-        logger.info("Eliminando reseña {}", idResena);
-
         try {
             // Verificar que existe
             Optional<Resena> resena = resenaDAO.buscarPorId(idResena);
@@ -148,23 +128,18 @@ public class ResenaService {
                 throw new ServiceException("Reseña no encontrada");
             }
 
-            // Verificar permisos (usuario es el autor o es admin)
-            if (!resena.get().getIdUsuario().equals(idUsuarioEliminador)) {
-                // Aquí verificarías si es admin
+            // Verificar permisos
+            if (resena.get().getIdUsuario() != idUsuarioEliminador) {
                 throw new ServiceException("No tienes permiso para eliminar esta reseña");
             }
 
             // Eliminar
             boolean eliminado = resenaDAO.eliminar(idResena);
-
             if (!eliminado) {
                 throw new ServiceException("No se pudo eliminar la reseña");
             }
 
-            logger.info("Reseña eliminada exitosamente");
-
         } catch (SQLException e) {
-            logger.error("Error al eliminar reseña", e);
             throw new ServiceException("Error al eliminar reseña", e);
         }
     }
@@ -211,7 +186,6 @@ public class ResenaService {
             );
 
         } catch (SQLException e) {
-            logger.error("Error al obtener reseñas", e);
             throw new ServiceException("Error al obtener reseñas", e);
         }
     }
@@ -229,7 +203,6 @@ public class ResenaService {
             return resenaDAO.obtenerPorCalificacion(idProducto, calificacion);
 
         } catch (SQLException e) {
-            logger.error("Error al obtener reseñas por calificación", e);
             throw new ServiceException("Error al obtener reseñas", e);
         }
     }
@@ -250,8 +223,7 @@ public class ResenaService {
             return resenas;
 
         } catch (SQLException e) {
-            logger.error("Error al obtener reseñas del usuario", e);
-            throw new ServiceException("Error al obtener reseñas", e);
+            throw new ServiceException("Error al obtener reseñas del usuario", e);
         }
     }
 
@@ -274,8 +246,7 @@ public class ResenaService {
             return resenas;
 
         } catch (SQLException e) {
-            logger.error("Error al obtener reseñas recientes", e);
-            throw new ServiceException("Error al obtener reseñas", e);
+            throw new ServiceException("Error al obtener reseñas recientes", e);
         }
     }
 
@@ -293,7 +264,6 @@ public class ResenaService {
             return new EstadisticasResenas(totalResenas, promedio, distribucion);
 
         } catch (SQLException e) {
-            logger.error("Error al obtener estadísticas", e);
             throw new ServiceException("Error al obtener estadísticas", e);
         }
     }
@@ -319,7 +289,6 @@ public class ResenaService {
             return new VerificacionResena(true, "Puedes reseñar este producto");
 
         } catch (SQLException e) {
-            logger.error("Error al verificar permisos de reseña", e);
             throw new ServiceException("Error al verificar permisos", e);
         }
     }
@@ -330,11 +299,11 @@ public class ResenaService {
      * Valida los datos de una reseña
      */
     private void validarResena(Resena resena) throws ServiceException {
-        if (resena.getIdProducto() == null) {
+        if (resena.getIdProducto() == null || resena.getIdProducto() <= 0) {
             throw new ServiceException("El ID del producto es requerido");
         }
 
-        if (resena.getIdUsuario() == null) {
+        if (resena.getIdUsuario() == null || resena.getIdUsuario() <= 0) {
             throw new ServiceException("El ID del usuario es requerido");
         }
 
@@ -373,23 +342,35 @@ public class ResenaService {
 
     /**
      * Verifica si un usuario ha comprado un producto
+     * ✅ CORREGIDO: Usa String en lugar de enum
      */
     private boolean haCompradoProducto(int idUsuario, int idProducto) throws SQLException {
         List<DetallePedido> detalles = detalleDAO.obtenerPorProducto(idProducto);
+
         for (DetallePedido detalle : detalles) {
-            Optional<Pedido> pedido = pedidoDAO.buscarPorId(detalle.getIdPedido());
-            if (pedido.isPresent() && pedido.get().getIdUsuario().equals(idUsuario)) {
-                // Verificar que el pedido esté entregado
-                if (pedido.get().getEstado() == Pedido.EstadoPedido.ENTREGADO) {
-                    return true;
+            Optional<Pedido> pedidoOpt = pedidoDAO.buscarPorId(detalle.getIdPedido());
+
+            if (pedidoOpt.isPresent()) {
+                Pedido pedido = pedidoOpt.get();
+
+                // Verificar que el pedido pertenece al usuario
+                if (pedido.getIdUsuario() == idUsuario) {
+                    // ✅ CORREGIDO: Usar String en lugar de enum
+                    if ("ENTREGADO".equals(pedido.getEstado())) {
+                        return true;
+                    }
                 }
             }
         }
+
         return false;
     }
 
     // ==================== CLASES INTERNAS ====================
 
+    /**
+     * Clase para manejar reseñas con paginación
+     */
     public static class ResenasPaginadas {
         private final List<Resena> resenas;
         private final int totalResenas;
@@ -419,6 +400,9 @@ public class ResenaService {
         public boolean tienePaginaSiguiente() { return paginaActual < totalPaginas; }
     }
 
+    /**
+     * Clase para estadísticas de reseñas
+     */
     public static class EstadisticasResenas {
         private final int totalResenas;
         private final double promedioCalificacion;
@@ -447,6 +431,9 @@ public class ResenaService {
         }
     }
 
+    /**
+     * Clase para verificación de permisos de reseña
+     */
     public static class VerificacionResena {
         private final boolean puede;
         private final String mensaje;
