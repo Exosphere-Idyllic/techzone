@@ -431,7 +431,7 @@ public class AdminServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/admin/productos");
 
-        } catch (IllegalArgumentException | NumberFormatException e) {
+        } catch (IllegalArgumentException e) {
             logger.warn("Error de validación: {}", e.getMessage());
             SessionUtil.setFlashMessage(request, "error", e.getMessage());
 

@@ -103,6 +103,52 @@ public class ProductoDAO {
         return Optional.empty();
     }
 
+    private Producto mapearResultSetAProducto(ResultSet rs) throws SQLException {
+        Producto producto = new Producto();
+
+        producto.setIdProducto(rs.getInt("id_producto"));
+        producto.setIdCategoria(rs.getInt("id_categoria"));
+        producto.setNombre(rs.getString("nombre"));
+        producto.setDescripcion(rs.getString("descripcion"));
+        producto.setPrecio(rs.getBigDecimal("precio"));
+        producto.setStock(rs.getInt("stock"));
+        producto.setMarca(rs.getString("marca"));
+        producto.setModelo(rs.getString("modelo"));
+        producto.setEspecificaciones(rs.getString("especificaciones"));
+
+        // Mapear estado
+        String estadoStr = rs.getString("estado");
+        if (estadoStr != null) {
+            try {
+                producto.setEstado(Producto.EstadoProducto.valueOf(estadoStr.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                producto.setEstado(Producto.EstadoProducto.DISPONIBLE);
+            }
+        }
+
+        producto.setFechaRegistro(rs.getTimestamp("fecha_registro").toLocalDateTime());
+
+        BigDecimal descuento = rs.getBigDecimal("descuento");
+        producto.setDescuento(descuento != null ? descuento : BigDecimal.ZERO);
+
+        // Campos adicionales para admin
+        producto.setSku(rs.getString("sku"));
+        producto.setActivo(rs.getBoolean("activo"));
+
+        // Intentar obtener imagen principal si existe en el resultado
+        try {
+            String imagenPrincipal = rs.getString("imagen_principal");
+            if (imagenPrincipal != null) {
+                producto.setImagenPrincipal(imagenPrincipal);
+            }
+        } catch (SQLException e) {
+            // Columna no existe en este query, ignorar
+        }
+
+        return producto;
+    }
+
+
     /**
      * Obtiene todos los productos ordenados por fecha de registro
      *

@@ -55,6 +55,12 @@ public class Producto implements Serializable {
     /** Porcentaje de descuento (0-100) */
     private BigDecimal descuento;
 
+    /** Indica si el producto está activo y visible en la tienda */
+    private Boolean activo;
+
+    /** SKU (Stock Keeping Unit) - código único del producto */
+    private String sku;
+
     // ==================== CAMPOS TRANSIENT (NO SE PERSISTEN EN DB) ====================
 
     /**
@@ -370,6 +376,23 @@ public class Producto implements Serializable {
         return precio;
     }
 
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+
     /**
      * ✅ NUEVO: Actualiza automáticamente el campo precioOriginal
      * Se llama cuando cambia el precio o el descuento
@@ -470,6 +493,14 @@ public class Producto implements Serializable {
                 .filter(img -> img.getEsPrincipal() != null && img.getEsPrincipal())
                 .findFirst()
                 .orElse(imagenes.get(0));
+    }
+    /**
+     * Verifica si el producto está activo
+     *
+     * @return true si está activo, false en caso contrario
+     */
+    public boolean estaActivo() {
+        return activo != null && activo;
     }
 
     // ==================== MÉTODOS AUXILIARES - CALIFICACIONES ====================

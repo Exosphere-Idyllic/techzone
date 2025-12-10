@@ -103,26 +103,28 @@ public class ProductoService {
      * Crea un nuevo producto con sus imágenes
      *
      * @param producto Producto a crear
-     * @param urlImagenes Lista de URLs de imágenes
      * @return ID del producto creado
      * @throws ServiceException Si hay error en la operación
      */
-    public int crearProducto(Producto producto, List<String> urlImagenes)
-            throws ServiceException {
+    /**
+     * Crea un nuevo producto (versión simple sin imágenes múltiples)
+     * Usado por AdminServlet
+     *
+     * @param producto Producto a crear
+     * @return ID del producto creado
+     * @throws ServiceException Si hay error en la operación
+     */
+    public int crearProducto(Producto producto) throws ServiceException {
         logger.info("Creando producto: {}", producto.getNombre());
 
         try {
             // Validar datos del producto
             validarProducto(producto);
 
-            // Verificar que la categoría existe y está activa
+            // Verificar que la categoría existe
             Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
             if (!categoria.isPresent()) {
                 throw new ServiceException("La categoría seleccionada no existe");
-            }
-
-            if (categoria.get().getEstado() != Categoria.EstadoCategoria.ACTIVO) {
-                throw new ServiceException("La categoría seleccionada no está activa");
             }
 
             // Establecer valores por defecto
@@ -138,17 +140,56 @@ public class ProductoService {
             int idProducto = productoDAO.crear(producto);
             producto.setIdProducto(idProducto);
 
-            // Agregar imágenes si existen
-            if (urlImagenes != null && !urlImagenes.isEmpty()) {
-                agregarImagenesAProducto(idProducto, urlImagenes);
-            }
-
             logger.info("Producto creado exitosamente con ID: {}", idProducto);
             return idProducto;
 
         } catch (SQLException e) {
             logger.error("Error al crear producto", e);
             throw new ServiceException("Error al crear producto: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene un producto por ID (versión simple)
+     *
+     * @param idProducto ID del producto
+     * @return Producto o null si no existe
+     * @throws ServiceException Si hay error en la operación
+     */
+    public Producto obtenerProductoPorId(int idProducto) throws ServiceException {
+        try {
+            Optional<Producto> productoOpt = productoDAO.buscarPorId(idProducto);
+
+            if (productoOpt.isPresent()) {
+                Producto producto = productoOpt.get();
+
+                // Cargar categoría
+                Optional<Categoria> categoria = categoriaDAO.buscarPorId(producto.getIdCategoria());
+                producto.setCategoria(categoria.orElse(null));
+
+                return producto;
+            }
+
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Error al obtener producto por ID", e);
+            throw new ServiceException("Error al obtener producto: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Cuenta productos sin stock (stock = 0)
+     *
+     * @return Número de productos sin stock
+     * @throws ServiceException Si hay error en la operación
+     */
+    public int contarProductosSinStock() throws ServiceException {
+        try {
+            return productoDAO.contarBajoStock(0);
+        } catch (SQLException e) {
+            logger.error("Error al contar productos sin stock: {}", e.getMessage());
+            throw new ServiceException("Error al contar productos sin stock: " + e.getMessage());
         }
     }
 
@@ -703,6 +744,8 @@ public class ProductoService {
         public List<ImagenProducto> getImagenes() { return imagenes; }
         public ImagenProducto getImagenPrincipal() { return imagenPrincipal; }
     }
+
+
 
     /**
      * Clase para filtros de búsqueda de productos
