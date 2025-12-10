@@ -990,19 +990,19 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Nombre *</label>
-                        <input type="text" name="nombre" id="nombre" class="form-control" required>
+                        <input type="text" name="nombre" id="nombre" class="form-control">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Apellido *</label>
-                        <input type="text" name="apellido" id="apellido" class="form-control" required>
+                        <input type="text" name="apellido" id="apellido" class="form-control">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group full-width">
                         <label class="form-label">Email *</label>
-                        <input type="email" name="email" id="email" class="form-control" required>
+                        <input type="email" name="email" id="email" class="form-control">
                     </div>
                 </div>
 
@@ -1014,7 +1014,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Rol *</label>
-                        <select name="rol" id="rol" class="form-control" required>
+                        <select name="rol" id="rol" class="form-control">
                             <option value="cliente">Cliente</option>
                             <option value="admin">Administrador</option>
                         </select>
@@ -1024,12 +1024,12 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Contraseña *</label>
-                        <input type="password" name="password" id="password" class="form-control" required>
+                        <input type="password" name="password" id="password" class="form-control">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Confirmar Contraseña *</label>
-                        <input type="password" name="confirmarPassword" id="confirmarPassword" class="form-control" required>
+                        <input type="password" name="confirmarPassword" id="confirmarPassword" class="form-control">
                     </div>
                 </div>
 

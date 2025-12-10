@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Servlet para gestión de pedidos: checkout, crear, historial, detalle
  * Requiere autenticación (protegido por AuthenticationFilter)
- * 
+ *
  * @author TechZone Team
  */
 @WebServlet(name = "PedidoServlet", urlPatterns = {
@@ -196,8 +196,8 @@ public class PedidoServlet extends HttpServlet {
             // Obtener pedido completo
             PedidoCompleto pedidoCompleto = pedidoService.obtenerPedidoCompleto(idPedido);
 
-            // Verificar que el pedido pertenece al usuario
-            if (!pedidoCompleto.getPedido().getIdUsuario().equals(idUsuario)) {
+            // CORREGIDO: getIdUsuario() devuelve int, no Integer
+            if (pedidoCompleto.getPedido().getIdUsuario() != idUsuario) {
                 logger.warn("Usuario {} intentó ver pedido {} de otro usuario",
                         idUsuario, idPedido);
                 response.sendRedirect(request.getContextPath() + "/pedidos");
@@ -271,8 +271,9 @@ public class PedidoServlet extends HttpServlet {
             // Obtener pedido completo
             PedidoCompleto pedidoCompleto = pedidoService.obtenerPedidoCompleto(idPedido);
 
+            // CORREGIDO: getIdUsuario() devuelve int, no Integer
             // Verificar que el pedido pertenece al usuario (o es admin)
-            if (!pedidoCompleto.getPedido().getIdUsuario().equals(idUsuario) 
+            if (pedidoCompleto.getPedido().getIdUsuario() != idUsuario
                     && !SessionUtil.isAdmin(request)) {
                 logger.warn("Usuario {} intentó ver pedido {} de otro usuario",
                         idUsuario, idPedido);
@@ -344,11 +345,12 @@ public class PedidoServlet extends HttpServlet {
                 return;
             }
 
-            // Crear el pedido
+            // CORREGIDO: crearPedidoDesdeCarrito acepta 4 parámetros incluyendo notas
             int idPedido = pedidoService.crearPedidoDesdeCarrito(
                     idUsuario,
                     direccionEnvio.trim(),
-                    metodoPago
+                    metodoPago,
+                    notas  // AGREGADO: parámetro notas que estaba faltando
             );
 
             // Limpiar contador de carrito en sesión
@@ -386,8 +388,9 @@ public class PedidoServlet extends HttpServlet {
 
             // Verificar que el pedido pertenece al usuario
             PedidoCompleto pedidoCompleto = pedidoService.obtenerPedidoCompleto(idPedido);
-            
-            if (!pedidoCompleto.getPedido().getIdUsuario().equals(idUsuario) 
+
+            // CORREGIDO: getIdUsuario() devuelve int, no Integer
+            if (pedidoCompleto.getPedido().getIdUsuario() != idUsuario
                     && !SessionUtil.isAdmin(request)) {
                 logger.warn("Usuario {} intentó cancelar pedido {} de otro usuario",
                         idUsuario, idPedido);

@@ -756,7 +756,7 @@
                                 class="form-input"
                                 placeholder="tu@email.com"
                                 value="${email}"
-                                required
+
                                 autocomplete="email"
                         >
                         <div class="input-border"></div>
@@ -778,7 +778,7 @@
                                 name="password"
                                 class="form-input"
                                 placeholder="••••••••"
-                                required
+
                                 autocomplete="current-password"
                         >
                         <button type="button" class="toggle-password" onclick="togglePassword()">

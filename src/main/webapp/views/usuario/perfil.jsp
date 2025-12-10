@@ -465,7 +465,7 @@
                                    id="nombre"
                                    name="nombre"
                                    value="${sessionScope.usuario.nombre}"
-                                   required>
+                                   >
                         </div>
 
                         <div class="form-group">
@@ -475,7 +475,7 @@
                                    id="apellido"
                                    name="apellido"
                                    value="${sessionScope.usuario.apellido}"
-                                   required>
+                                   >
                         </div>
                     </div>
 
@@ -486,7 +486,7 @@
                                id="email"
                                name="email"
                                value="${sessionScope.usuario.email}"
-                               required>
+                               >
                     </div>
 
                     <div class="form-group">
@@ -531,7 +531,7 @@
                                    class="form-control"
                                    id="passwordActual"
                                    name="passwordActual"
-                                   required>
+                                   >
                             <button type="button" class="password-toggle" onclick="togglePassword('passwordActual')">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -561,7 +561,7 @@
                                    class="form-control"
                                    id="confirmarPassword"
                                    name="confirmarPassword"
-                                   required
+
                                    minlength="8">
                             <button type="button" class="password-toggle" onclick="togglePassword('confirmarPassword')">
                                 <i class="fas fa-eye"></i>

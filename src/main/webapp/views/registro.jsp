@@ -652,7 +652,7 @@
                                     class="form-input"
                                     placeholder="Tu nombre"
                                     value="${nombre}"
-                                    required
+
                                     autocomplete="given-name"
                                     minlength="2"
                                     maxlength="50"
@@ -676,7 +676,7 @@
                                     class="form-input"
                                     placeholder="Tu apellido"
                                     value="${apellido}"
-                                    required
+
                                     autocomplete="family-name"
                                     minlength="2"
                                     maxlength="50"
@@ -702,7 +702,7 @@
                                 class="form-input"
                                 placeholder="tu@email.com"
                                 value="${email}"
-                                required
+
                                 autocomplete="email"
                         >
                         <div class="input-border"></div>
@@ -770,7 +770,7 @@
                                 name="password"
                                 class="form-input"
                                 placeholder="Mínimo 8 caracteres"
-                                required
+
                                 autocomplete="new-password"
                                 minlength="8"
                                 oninput="checkPasswordStrength(this.value)"
@@ -806,7 +806,7 @@
                                 name="confirmPassword"
                                 class="form-input"
                                 placeholder="Repite tu contraseña"
-                                required
+
                                 autocomplete="new-password"
                                 minlength="8"
                         >
